@@ -1,0 +1,7 @@
+venv/
+*.pyc
+__pycache__/
+*.db
+*.sqlite
+.env
+scraper_errors.log

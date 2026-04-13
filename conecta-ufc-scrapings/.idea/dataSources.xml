@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
+    <data-source source="LOCAL" name="conecta_ufc.sqlite" uuid="02e0d26d-72cf-42b5-b8f2-336209765285">
+      <driver-ref>sqlite.xerial</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
+      <jdbc-url>jdbc:sqlite:file:\\wsl.localhost\Ubuntu\home\aaronlinux\workspace\projects\PyProjects\Conecta-UFC\conect-ufc-scrapings\conecta_ufc.db?nolock=1</jdbc-url>
+      <working-dir>$ProjectFileDir$</working-dir>
+    </data-source>
+  </component>
+</project>
