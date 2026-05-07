@@ -1,9 +1,3 @@
-Entendido. Vamos elevar o tom técnico e eliminar as metáforas informais. O foco aqui é transparecer a robustez da arquitetura distribuída e a seriedade do projeto acadêmico.
-
-Aqui está a versão refinada do **README.md** central, projetada para servir tanto como guia para desenvolvedores humanos quanto como "fonte da verdade" para assistentes de IA:
-
----
-
 # Conecta-UFC: Sistema Distribuído de Agregação de Oportunidades
 
 O **Conecta-UFC** é uma plataforma de alta disponibilidade projetada para centralizar e normalizar a oferta de oportunidades acadêmicas e profissionais (bolsas de fomento, monitorias, extensões e editais de pesquisa) da Universidade Federal do Ceará. 
