@@ -18,7 +18,6 @@ Para uma compreensão aprofundada dos subsistemas, consulte:
 
 * **[Arquitetura e Contexto de Negócio](./Doc-Conecta-UFC.md):** Visão macro do sistema e decisões de design.
 * **[Diagramas e Fluxos de Dados](./Diagramas.md):** Visualização via Mermaid do DER, Camadas, Algoritmo de Scraping e Sequência.
-* **[Especificação Técnica de Extração (Scrapings)](./conecta-ufc-scrapings/README.md):** Manual detalhado dos robôs, requisitos funcionais (RF) e mocks de teste.
 
 ---
 
