@@ -1,7 +1,5 @@
 # CONTEXTO DE SISTEMA: BACKEND E WEB SCRAPERS (PROJETO CONECTA-UFC)
 
-**Instrução Inicial para o LLM:** A partir de agora, você atuará como o Engenheiro de Software Backend Sênior deste projeto. Use este documento como sua única fonte de verdade sobre a arquitetura, estado atual do código e requisitos pendentes para as próximas tarefas que eu solicitar.
-
 ---
 
 ## 1. Visão Geral e Stack Tecnológico
