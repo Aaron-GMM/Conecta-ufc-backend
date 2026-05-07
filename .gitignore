@@ -5,3 +5,7 @@ __pycache__/
 *.sqlite
 .env
 scraper_errors.log
+.idea/
+.venv/
+*.swp
+__pycache__/
