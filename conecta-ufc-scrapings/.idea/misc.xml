@@ -3,5 +3,5 @@
   <component name="Black">
     <option name="sdkName" value="Python 3.12.3 WSL (Ubuntu): (/usr/bin/python3)" />
   </component>
-  <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.12.3 WSL (Ubuntu): (/home/aaronlinux/.virtualenvs/conect-ufc-scrapings/bin/python) (2)" project-jdk-type="Python SDK" />
+  <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.12.3 WSL (Ubuntu): (/home/aaronlinux/.virtualenvs/conecta-ufc-scrapings/bin/python)" project-jdk-type="Python SDK" />
 </project>
