@@ -1,16 +1,17 @@
-# This is a sample Python script.
+from fastapi import FastAPI
+from app.api.routers import oportunidade_routes, scraper_routes, resultado_routes # Importe aqui
+from app.db.database import engine, Base
 
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+# Cria as tabelas se não existirem (embora estejamos usando Alembic)
+Base.metadata.create_all(bind=engine)
 
+app = FastAPI(title="Conecta UFC API")
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+# Registro dos roteadores
+app.include_router(oportunidade_routes.router)
+app.include_router(scraper_routes.router)
+app.include_router(resultado_routes.router) # Adicione esta linha
 
-
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+@app.get("/")
+def read_root():
+    return {"message": "API Conecta UFC está rodando!"}
