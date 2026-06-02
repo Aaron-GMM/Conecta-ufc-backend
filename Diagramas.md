@@ -107,8 +107,20 @@ O banco de dados foi modelado para suportar a relação de um Edital para múlti
 
 ```mermaid
 erDiagram
+    USUARIOS ||--o{ FAVORITOS : "salva"
+    OPORTUNIDADES ||--o{ FAVORITOS : "é favoritada por"
+    USUARIOS ||--o{ ALERTAS : "recebe"
+    OPORTUNIDADES ||--o{ ALERTAS : "gera"
     OPORTUNIDADES ||--o{ RESULTADOS : "possui"
 
+    USUARIOS {
+        int id PK
+        string nome
+        string email
+        string senha
+        string tipo_usuario
+    }
+    
     OPORTUNIDADES {
         int id PK
         string titulo
@@ -117,11 +129,24 @@ erDiagram
         string link
         string datas
     }
-
+    
     RESULTADOS {
         int id PK
         string titulo
         string link
+        int oportunidade_id FK
+    }
+    
+    FAVORITOS {
+        int usuario_id FK
+        int oportunidade_id FK
+    }
+    
+    ALERTAS {
+        int id PK
+        string mensagem
+        date data_aviso
+        int usuario_id FK
         int oportunidade_id FK
     }
 ```
