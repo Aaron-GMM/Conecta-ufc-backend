@@ -12,6 +12,7 @@ Para uma compreensão aprofundada dos subsistemas, consulte:
 
 * **[Arquitetura e Contexto de Negócio](./Doc-Conecta-UFC.md):** Visão macro do sistema e decisões de design.
 * **[Diagramas e Fluxos de Dados](./Diagramas.md):** Visualização via Mermaid do DER, Camadas, Algoritmo de Scraping e Sequência.
+* **[Centralização do Projeto].(https://app.notion.com/p/ConectaUFC-Documenta-o-36336e3d1225803cb9e7d4cecb25b3b9)**
 
 ---
 
