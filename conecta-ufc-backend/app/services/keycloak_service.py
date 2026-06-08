@@ -13,6 +13,10 @@ def criar_usuario_keycloak(usuario: UsuarioCreate) -> str:
             detail="KEYCLOAK_CLIENT_SECRET nao configurado",
         )
 
+    partes_nome = usuario.nome.strip().split(maxsplit=1)
+    primeiro_nome = partes_nome[0]
+    sobrenome = partes_nome[1] if len(partes_nome) > 1 else partes_nome[0]
+
     keycloak_admin = KeycloakAdmin(
         server_url=settings.keycloak_server_url,
         realm_name=settings.keycloak_realm,
@@ -24,9 +28,11 @@ def criar_usuario_keycloak(usuario: UsuarioCreate) -> str:
     payload = {
         "username": usuario.email,
         "email": usuario.email,
-        "firstName": usuario.nome,
+        "firstName": primeiro_nome,
+        "lastName": sobrenome,
         "enabled": True,
         "emailVerified": True,
+        "requiredActions": [],
         "attributes": {
             "curso": [usuario.curso],
             "oportunidades": usuario.oportunidades,
