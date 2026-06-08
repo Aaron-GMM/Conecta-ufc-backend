@@ -9,4 +9,4 @@ scraper_errors.log
 .venv/
 *.swp
 __pycache__/
-AUTH_KEYKLOAK_EXPLICADO.md
+AUTH_KEYCLOAK_EXPLICADO.md
