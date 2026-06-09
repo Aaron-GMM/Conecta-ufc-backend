@@ -1,9 +1,14 @@
+import logging
+
 from fastapi import HTTPException, status
 from keycloak import KeycloakAdmin, KeycloakOpenID
 from keycloak.exceptions import KeycloakError
 
 from app.core.config import settings
 from app.schemas.usuario import LoginRequest, UsuarioCreate
+
+
+logger = logging.getLogger(__name__)
 
 
 def criar_usuario_keycloak(usuario: UsuarioCreate) -> str:
@@ -49,6 +54,7 @@ def criar_usuario_keycloak(usuario: UsuarioCreate) -> str:
     try:
         return keycloak_admin.create_user(payload)
     except KeycloakError as exc:
+        logger.exception("Falha ao criar usuario no Keycloak")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Nao foi possivel criar o usuario no Keycloak",
@@ -66,6 +72,7 @@ def login_keycloak(login: LoginRequest) -> dict:
     try:
         token = keycloak_openid.token(login.email, login.senha)
     except KeycloakError as exc:
+        logger.exception("Falha ao autenticar usuario no Keycloak")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Email ou senha invalidos",
