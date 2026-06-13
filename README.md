@@ -42,6 +42,38 @@ O repositório é segmentado em dois componentes independentes, permitindo escal
 | **PostgreSQL** | Banco de Dados de Produção (Relacional) |
 | **Pydantic** | Validação de Dados e Higienização (Type Hinting) |
 
+---
+
+## Keycloak local para desenvolvimento
+
+Para outra pessoa testar o cadastro e o login sem configurar o Keycloak manualmente, suba o container:
+
+```bash
+docker compose up -d keycloak
+```
+
+O compose importa automaticamente o realm `conecta-ufc` com os clients `conecta-ufc-backend` e `conecta-ufc-frontend`.
+
+Painel administrativo:
+
+- URL: `http://localhost:8080`
+- Usuario: `admin`
+- Senha: `admin`
+
+Configure o backend com os valores de `conecta-ufc-backend/.env.example`. O segredo de desenvolvimento ja esperado pelo import e:
+
+```bash
+cp conecta-ufc-backend/.env.example conecta-ufc-backend/.env
+```
+
+```env
+KEYCLOAK_CLIENT_SECRET=conecta-ufc-dev-secret
+```
+
+Depois disso, o frontend continua chamando apenas os endpoints do backend:
+
+- `POST /usuarios`
+- `POST /usuarios/login`
 
 
 ---
