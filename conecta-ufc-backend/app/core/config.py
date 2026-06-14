@@ -1,4 +1,5 @@
 from os import getenv
+from pathlib import Path
 from dotenv import load_dotenv
 
 # Carrega o .env da raiz do backend

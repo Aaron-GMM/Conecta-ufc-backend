@@ -37,13 +37,8 @@ services:
     container_name: conecta-backend
     ports:
       - "8000:8000"
-    volumes:
-      - ./conecta-ufc-backend:/app
     env_file:
-      - ./conecta-ufc-backend/.env
-    environment:
-      - DATABASE_URL=postgresql://conecta_user:conecta_password@conecta-postgres:5432/conecta_db
-      - KEYCLOAK_SERVER_URL=http://conecta-keycloak:8080/
+      - ./conecta-ufc-backend/.env.docker
     depends_on:
       - postgres
       - keycloak
