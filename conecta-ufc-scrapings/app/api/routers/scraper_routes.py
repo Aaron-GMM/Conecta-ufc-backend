@@ -37,7 +37,11 @@ def rodar_scraper_ufc(db: Session = Depends(get_db)):
                 titulo=item["titulo"],
                 origem=item["origem"],
                 tipo=item["tipo"],
-                link=link
+                link=link,
+                data_inicio=item.get("data_inicio"),
+                data_fim=item.get("data_fim"),
+                remuneracao=item.get("remuneracao"),
+                vagas=item.get("vagas")
             )
             db.add(vaga_db)
             db.flush()
@@ -115,6 +119,11 @@ def rodar_scraper_fastef(db: Session = Depends(get_db)):
             if fantasma:
                 fantasma.titulo = item["titulo"]
                 fantasma.link = item["link"]
+                # ATUALIZA O FANTASMA COM OS DADOS REAIS DO PDF
+                fantasma.data_inicio = item.get("data_inicio")
+                fantasma.data_fim = item.get("data_fim")
+                fantasma.remuneracao = item.get("remuneracao")
+                fantasma.vagas = item.get("vagas")
                 db.flush()
                 continue
 
@@ -122,7 +131,11 @@ def rodar_scraper_fastef(db: Session = Depends(get_db)):
             titulo=item["titulo"],
             origem=item["origem"],
             tipo=item["tipo"],
-            link=item["link"]
+            link=item["link"],
+            data_inicio=item.get("data_inicio"),
+            data_fim=item.get("data_fim"),
+            remuneracao=item.get("remuneracao"),
+            vagas=item.get("vagas")
         )
         db.add(nova_vaga)
         salvos += 1

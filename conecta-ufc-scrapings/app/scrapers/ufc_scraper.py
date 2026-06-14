@@ -4,6 +4,7 @@ import re
 from datetime import datetime
 from bs4 import BeautifulSoup
 from app.scrapers.base_scraper import BaseScraper
+from app.scrapers.pdf_parser import PdfParser
 
 
 class UfcScraper(BaseScraper):
@@ -13,6 +14,7 @@ class UfcScraper(BaseScraper):
         super().__init__()
         self.url = "https://www.quixada.ufc.br/bolsas/"
         self.origem = "UFC-Quixadá"
+        self.pdf_parser = PdfParser()  # Instancia o parser
 
     def _extrair_datas(self, texto: str):
         """
@@ -47,11 +49,7 @@ class UfcScraper(BaseScraper):
     def run(self):
         self.logger.info(f"Iniciando requisição para: {self.url}")
         html_content = self.fetch_html(self.url)
-
-        if not html_content:
-            self.logger.error("Falha ao obter o HTML da UFC. Abortando extração.")
-            return []
-
+        if not html_content: return []
         return self.parse_html(html_content)
 
     def parse_html(self, html_content):
@@ -66,43 +64,43 @@ class UfcScraper(BaseScraper):
             categoria_geral = tag_categoria.text.strip() if tag_categoria else "Sem Categoria"
 
             conteudo = bloco.find('div', class_='hrf-content')
-            if not conteudo:
-                continue
+            if not conteudo: continue
 
             listas_links = conteudo.find_all('ul')
 
             for ul in listas_links:
                 titulo_vaga = "Título não encontrado"
                 tag_anterior = ul.find_previous_sibling(['p', 'div', 'strong', 'h4'])
-
                 texto_busca = ul.get_text(separator=' ')
                 if tag_anterior:
                     titulo_vaga = tag_anterior.get_text(strip=True)
                     texto_busca += f" {tag_anterior.get_text(separator=' ')}"
 
-                # Tenta extrair as datas do bloco de texto
-                data_inicio, data_fim = self._extrair_datas(texto_busca)
-
+                data_inicio_html, data_fim_html = self._extrair_datas(texto_busca)
                 links_adicionais = []
                 link_edital = None
 
                 for a in ul.find_all('a'):
                     texto_link = a.get_text(strip=True)
                     href = a.get('href')
-
                     if any(palavra in texto_link.lower() for palavra in ['edital', 'seleção', 'chamada']):
                         link_edital = href
                     else:
                         links_adicionais.append({"titulo": texto_link, "link": href})
 
                 if link_edital:
+                    # EXTRAÇÃO PDF
+                    dados_pdf = self.pdf_parser.extrair_dados(link_edital, titulo_vaga)
+
                     vaga = {
                         "titulo": titulo_vaga,
                         "origem": self.origem,
                         "tipo": categoria_geral,
                         "link": link_edital,
-                        "data_inicio": data_inicio,  # Agora mapeado!
-                        "data_fim": data_fim,  # Agora mapeado!
+                        "data_inicio": data_inicio_html or dados_pdf.get("data_inicio"),
+                        "data_fim": data_fim_html or dados_pdf.get("data_fim"),
+                        "remuneracao": dados_pdf.get("remuneracao"),
+                        "vagas": dados_pdf.get("vagas"),
                         "resultados": links_adicionais
                     }
                     oportunidades.append(vaga)
