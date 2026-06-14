@@ -22,6 +22,7 @@ O ecossistema opera sob o padrão **Store and Forward**, desacoplando a fase cr�
 ## 📂 Documentação e Artefatos
 *   **[Documento de Arquitetura](./ARQUITETURA.md):** Detalhamento técnico, diagramas Mermaid (DER, Fluxos, Sequência) e justificativa tecnológica.
 *   **[Apresentação de Artefatos](./ARTEFATOS.md):** Resumo de tudo que foi desenvolvido (Scrapers, API, Banco de Dados, UI).
+*   **[Guia de Configuração e Execução](./GUIA_CONFIGURACAO.md):** Passo a passo detalhado para rodar o projeto, variáveis de ambiente e catálogo de rotas.
 *   **[Auditoria e Planejamento](./RELATORIO_PLANEJAMENTO.md):** Relatório de estado atual e planejamento das próximas entregas.
 
 ---
