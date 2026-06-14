@@ -32,3 +32,19 @@ class OportunidadeResponse(BaseModel):
 class PaginatedOportunidadeResponse(BaseModel):
     data: List[OportunidadeResponse]
     meta: dict
+
+# Schemas para Sincronização (Ingestão)
+class ResultadoSync(BaseModel):
+    titulo: str
+    link: str
+
+class OportunidadeSync(BaseModel):
+    titulo: str
+    origem: str
+    tipo: str
+    link: str
+    data_inicio: Optional[datetime] = None
+    data_fim: Optional[datetime] = None
+    remuneracao: Optional[float] = None
+    vagas: Optional[int] = None
+    resultados: List[ResultadoSync] = []
