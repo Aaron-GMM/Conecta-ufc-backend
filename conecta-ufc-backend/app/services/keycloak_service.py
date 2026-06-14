@@ -54,10 +54,16 @@ def criar_usuario_keycloak(usuario: UsuarioCreate) -> str:
     try:
         return keycloak_admin.create_user(payload)
     except KeycloakError as exc:
+        if exc.response_code == 409:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Usuario ja cadastrado com este e-mail",
+            ) from exc
+        
         logger.exception("Falha ao criar usuario no Keycloak")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Nao foi possivel criar o usuario no Keycloak",
+            detail="Nao foi possivel criar o usuario no Keycloak. Verifique os dados.",
         ) from exc
 
 
