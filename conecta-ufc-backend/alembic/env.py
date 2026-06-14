@@ -12,8 +12,7 @@ sys.path.insert(0, os.path.realpath(os.path.join(os.path.dirname(__file__), '..'
 
 from app.core.config import settings
 from app.db.database import Base
-# Importar os modelos aqui depois de portá-los para garantir que sejam detectados
-# from app.models.oportunidade import OportunidadeDB, ResultadoDB
+from app.models.oportunidade import OportunidadeDB, ResultadoDB
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
