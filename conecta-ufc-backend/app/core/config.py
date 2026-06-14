@@ -13,5 +13,4 @@ class Settings:
     frontend_origin: str = getenv("FRONTEND_ORIGIN", "http://localhost:5173")
     database_url: str | None = getenv("DATABASE_URL")
 
-
 settings = Settings()
