@@ -1,5 +1,6 @@
 from bs4 import BeautifulSoup
 from app.scrapers.base_scraper import BaseScraper
+from app.scrapers.pdf_parser import PdfParser
 
 
 class FastefScraper(BaseScraper):
@@ -7,6 +8,7 @@ class FastefScraper(BaseScraper):
         super().__init__()
         self.url = "https://fastef.ufc.br/processos-seletivos/"
         self.origem = "FASTEF"
+        self.pdf_parser = PdfParser()  # Instancia o novo parser
 
     def run(self):
         """Método principal que orquestra a raspagem."""
@@ -37,11 +39,18 @@ class FastefScraper(BaseScraper):
             link = tag_link.get('href') if tag_link else None
 
             if link and titulo != "Sem Título":
+                # 🌟 INJEÇÃO DA NOVA FEATURE AQUI 🌟
+                dados_extras = self.pdf_parser.extrair_dados(link, titulo)
+
                 vaga = {
                     "titulo": titulo,
                     "origem": self.origem,
                     "tipo": "Processo Seletivo",
-                    "link": link
+                    "link": link,
+                    "data_inicio": dados_extras.get("data_inicio"),
+                    "data_fim": dados_extras.get("data_fim"),
+                    "remuneracao": dados_extras.get("remuneracao"),
+                    "vagas": dados_extras.get("vagas")
                 }
                 oportunidades.append(vaga)
 
