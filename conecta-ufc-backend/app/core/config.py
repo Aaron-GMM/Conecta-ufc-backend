@@ -1,12 +1,9 @@
 from os import getenv
 from pathlib import Path
-
 from dotenv import load_dotenv
 
-
-ENV_PATH = Path(__file__).resolve().parents[2] / ".env"
-load_dotenv(ENV_PATH)
-
+# Carrega o .env da raiz do backend
+load_dotenv()
 
 class Settings:
     keycloak_server_url: str = getenv("KEYCLOAK_SERVER_URL", "http://localhost:8080/")
@@ -14,6 +11,7 @@ class Settings:
     keycloak_client_id: str = getenv("KEYCLOAK_CLIENT_ID", "conecta-ufc-backend")
     keycloak_client_secret: str | None = getenv("KEYCLOAK_CLIENT_SECRET")
     frontend_origin: str = getenv("FRONTEND_ORIGIN", "http://localhost:5173")
+    database_url: str | None = getenv("DATABASE_URL")
 
 
 settings = Settings()

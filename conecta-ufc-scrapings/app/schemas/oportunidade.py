@@ -10,7 +10,6 @@ class ResultadoResponse(BaseModel):
     link: str
     data_publicacao: Optional[datetime] = None
 
-    # Permite que o Pydantic leia diretamente dos modelos do SQLAlchemy
     model_config = ConfigDict(from_attributes=True)
 
 
@@ -22,6 +21,11 @@ class OportunidadeResponse(BaseModel):
     link: str
     data_inicio: Optional[datetime] = None
     data_fim: Optional[datetime] = None
+
+    # NOVOS CAMPOS NA RESPOSTA
+    remuneracao: Optional[float] = None
+    vagas: Optional[int] = None
+
     data_criacao: Optional[datetime] = None
 
     resultados: List[ResultadoResponse] = []
@@ -32,6 +36,7 @@ class OportunidadeResponse(BaseModel):
 class PaginatedOportunidadeResponse(BaseModel):
     data: List[OportunidadeResponse]
     meta: dict
+
 
 class PaginatedResultadoResponse(BaseModel):
     data: List[ResultadoResponse]
