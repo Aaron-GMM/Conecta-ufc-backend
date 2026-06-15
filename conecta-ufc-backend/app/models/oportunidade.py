@@ -22,6 +22,7 @@ class OportunidadeDB(Base):
     data_criacao = Column(DateTime, default=datetime.utcnow)
 
     resultados = relationship("ResultadoDB", back_populates="oportunidade", cascade="all, delete-orphan")
+    favoritos = relationship("FavoritoDB", back_populates="oportunidade", cascade="all, delete-orphan")
 
 
 class ResultadoDB(Base):
@@ -34,3 +35,14 @@ class ResultadoDB(Base):
 
     oportunidade_id = Column(Integer, ForeignKey("oportunidades.id"))
     oportunidade = relationship("OportunidadeDB", back_populates="resultados")
+
+
+class FavoritoDB(Base):
+    __tablename__ = "favoritos"
+
+    id = Column(Integer, primary_key=True, index=True)
+    usuario_id = Column(String, index=True)  # ID do Keycloak (sub)
+    oportunidade_id = Column(Integer, ForeignKey("oportunidades.id"))
+    data_favoritado = Column(DateTime, default=datetime.utcnow)
+
+    oportunidade = relationship("OportunidadeDB", back_populates="favoritos")
