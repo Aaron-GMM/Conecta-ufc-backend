@@ -66,3 +66,5 @@ docker compose up -d
 
 O painel do Keycloak estará disponível em `http://localhost:8080`.
 A documentação interativa da API (Swagger) poderá ser acessada em `http://localhost:8000/docs`.
+
+Para um passo a passo de como validar as funcionalidades, consulte o [**Guia de Configuração e Testes**](./GUIA_CONFIGURACAO.md#🧪-guia-de-testes-mvp).

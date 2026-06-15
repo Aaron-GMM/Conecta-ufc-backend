@@ -59,7 +59,10 @@ docker compose up -d --build
 *   `POST /usuarios/login`: Realiza o login e retorna o `access_token` JWT.
 
 #### Oportunidades (`/oportunidades`)
-*   `GET /oportunidades`: Lista todas as oportunidades sincronizadas no banco central.
+*   `GET /oportunidades`: Lista oportunidades com suporte a paginação e filtros (`busca`, `origem`, `tipo`).
+*   `POST /oportunidades/{id}/favoritar`: **[AUTENTICADO]** Adiciona uma oportunidade aos favoritos do usuário.
+*   `DELETE /oportunidades/{id}/favoritar`: **[AUTENTICADO]** Remove uma oportunidade dos favoritos.
+*   `GET /oportunidades/favoritos`: **[AUTENTICADO]** Lista todas as oportunidades favoritadas pelo usuário logado.
 
 #### Interno / Sincronização (`/internal`)
 *   `POST /internal/sync`: **[PROTEGIDO]** Recebe dados do Worker. Requer header `X-Sync-Key`.
@@ -117,3 +120,74 @@ Caso altere modelos, use o Alembic dentro dos containers:
 docker exec -it conecta-scrapings alembic revision --autogenerate -m "nome"
 docker exec -it conecta-scrapings alembic upgrade head
 ```
+
+---
+
+## 🧪 Guia de Testes (MVP)
+
+Este guia detalha como validar as funcionalidades principais do sistema utilizando `cURL` e como explorar a API via documentação interativa (Swagger).
+
+### 1. Testando via cURL (Passo a Passo)
+
+#### A. Fluxo de Oportunidades (Público)
+
+1.  **Listagem Paginada:**
+    ```bash
+    curl -s -X GET "http://localhost:8000/oportunidades?page=1&size=5" | python3 -m json.tool
+    ```
+
+2.  **Busca por Título:**
+    ```bash
+    curl -s -X GET "http://localhost:8000/oportunidades?busca=Monitoria" | python3 -m json.tool
+    ```
+
+3.  **Filtragem por Origem e Tipo:**
+    ```bash
+    curl -s -X GET "http://localhost:8000/oportunidades?origem=UFC-Quixad%C3%A1&tipo=PID" | python3 -m json.tool
+    ```
+
+#### B. Fluxo de Usuário e Favoritos (Autenticado)
+
+1.  **Criar um Usuário:**
+    ```bash
+    curl -s -X POST "http://localhost:8000/usuarios" \
+         -H "Content-Type: application/json" \
+         -d '{
+               "nome": "Aluno Teste",
+               "email": "aluno.teste@example.com",
+               "senha": "password123",
+               "curso": "Engenharia de Software",
+               "oportunidades": ["Estágio"]
+             }'
+    ```
+
+2.  **Fazer Login (Obter Token):**
+    ```bash
+    # O comando abaixo extrai apenas o token do JSON de resposta
+    TOKEN=$(curl -s -X POST "http://localhost:8000/usuarios/login" \
+         -H "Content-Type: application/json" \
+         -d '{"email": "aluno.teste@example.com", "senha": "password123"}' | python3 -c "import sys, json; print(json.load(sys.stdin)['access_token'])")
+    echo "Seu Token: $TOKEN"
+    ```
+
+3.  **Favoritar uma Oportunidade (Ex: ID 211):**
+    ```bash
+    curl -s -X POST "http://localhost:8000/oportunidades/211/favoritar" \
+         -H "Authorization: Bearer $TOKEN"
+    ```
+
+4.  **Listar Meus Favoritos:**
+    ```bash
+    curl -s -X GET "http://localhost:8000/oportunidades/favoritos" \
+         -H "Authorization: Bearer $TOKEN" | python3 -m json.tool
+    ```
+
+### 2. Testando via Swagger (Interface Web)
+
+1.  Acesse: `http://localhost:8000/docs`.
+2.  Para rotas protegidas (Favoritos):
+    *   Primeiro, use o endpoint `POST /usuarios/login` para obter o token.
+    *   Copie o valor de `access_token`.
+    *   No topo da página, clique no botão **"Authorize"** (ícone de cadeado).
+    *   Cole o token no campo e clique em **"Authorize"**.
+    *   Agora você pode testar os endpoints de favoritos diretamente na interface.
