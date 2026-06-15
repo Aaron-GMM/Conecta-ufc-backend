@@ -38,10 +38,23 @@ services:
     ports:
       - "8000:8000"
     env_file:
-      - ./conecta-ufc-backend/.env.docker
+      - ./conecta-ufc-backend/.env
     depends_on:
       - postgres
       - keycloak
+    networks:
+      - conecta-network
+
+  scrapings:
+    build:
+      context: ./conecta-ufc-scrapings
+    container_name: conecta-scrapings
+    ports:
+      - "8001:8001"
+    env_file:
+      - ./conecta-ufc-scrapings/.env
+    volumes:
+      - ./conecta-ufc-scrapings/data:/app/data
     networks:
       - conecta-network
 
