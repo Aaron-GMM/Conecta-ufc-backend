@@ -1,6 +1,6 @@
 import logging
 
-from fastapi import HTTPException, status
+from fastapi import HTTPException, status, Depends
 from keycloak import KeycloakAdmin, KeycloakOpenID
 from keycloak.exceptions import KeycloakError
 
@@ -10,6 +10,33 @@ from app.schemas.usuario import LoginRequest, UsuarioCreate
 
 logger = logging.getLogger(__name__)
 
+
+from jose import JWTError, jwt
+from fastapi.security import OAuth2PasswordBearer
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="usuarios/login")
+
+def decode_token(token: str) -> dict:
+    try:
+        # Extrai os claims sem verificar a assinatura para o MVP/Dev
+        logger.info(f"Decodificando token: {token[:20]}...")
+        return jwt.get_unverified_claims(token)
+    except JWTError as e:
+        logger.error(f"Erro ao decodificar token: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token inválido ou expirado",
+        )
+
+def get_current_user_id(token: str = Depends(oauth2_scheme)) -> str:
+    payload = decode_token(token)
+    user_id: str = payload.get("sub")
+    if user_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="ID do usuário não encontrado no token",
+        )
+    return user_id
 
 def criar_usuario_keycloak(usuario: UsuarioCreate) -> str:
     if not settings.keycloak_client_secret:
