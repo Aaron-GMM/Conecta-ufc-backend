@@ -12,5 +12,6 @@ class Settings:
     keycloak_client_secret: str | None = getenv("KEYCLOAK_CLIENT_SECRET")
     frontend_origin: str = getenv("FRONTEND_ORIGIN", "http://localhost:5173")
     database_url: str | None = getenv("DATABASE_URL")
+    sync_api_key: str = getenv("SYNC_API_KEY", "conecta-ufc-dev-key")
 
 settings = Settings()

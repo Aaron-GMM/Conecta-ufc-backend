@@ -5,9 +5,16 @@ from app.db.database import get_db
 from app.models.oportunidade import OportunidadeDB, ResultadoDB
 from app.scrapers.fastef_scraper import FastefScraper
 from app.scrapers.ufc_scraper import UfcScraper
+from app.services.sync_service import SyncService
 import re
 
 router = APIRouter(prefix="/api/scrapers", tags=["Scrapers"])
+
+@router.post("/sync")
+def rodar_sincronizacao():
+    sync_service = SyncService()
+    sync_service.sync()
+    return {"status": "Sincronização iniciada manualmente"}
 
 @router.post("/ufc/run")
 def rodar_scraper_ufc(db: Session = Depends(get_db)):

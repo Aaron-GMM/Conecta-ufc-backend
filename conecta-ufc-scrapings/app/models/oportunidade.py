@@ -23,6 +23,7 @@ class OportunidadeDB(Base):
     vagas = Column(Integer, nullable=True)
 
     data_criacao = Column(DateTime, default=datetime.utcnow)
+    sincronizado = Column(Integer, default=0)  # 0 = não sincronizado, 1 = sincronizado
 
     resultados = relationship("ResultadoDB", back_populates="oportunidade", cascade="all, delete-orphan")
 
