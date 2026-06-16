@@ -110,7 +110,12 @@ def recuperar_senha_keycloak(esqueci_senha: EsqueciSenhaRequest) -> None:
             )
             return
 
-        keycloak_admin.send_update_account(user_id, payload=["UPDATE_PASSWORD"])
+        keycloak_admin.send_update_account(
+            user_id,
+            payload=["UPDATE_PASSWORD"],
+            client_id=settings.keycloak_frontend_client_id,
+            redirect_uri=settings.frontend_login_url,
+        )
     except KeycloakError as exc:
         logger.exception("Falha ao enviar email de recuperacao de senha pelo Keycloak")
         raise HTTPException(

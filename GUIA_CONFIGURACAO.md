@@ -23,6 +23,8 @@ O sistema utiliza arquivos `.env` para gerenciar configurações sensíveis e de
 | `KEYCLOAK_REALM` | Realm configurado no Keycloak | `conecta-ufc` |
 | `KEYCLOAK_CLIENT_ID` | ID do cliente para o backend | `conecta-ufc-backend` |
 | `KEYCLOAK_CLIENT_SECRET` | Secret gerado pelo Keycloak | `conecta-ufc-dev-secret` |
+| `KEYCLOAK_FRONTEND_CLIENT_ID` | Client publico usado no reset de senha | `conecta-ufc-frontend` |
+| `FRONTEND_LOGIN_URL` | URL final apos a redefinicao de senha | `http://localhost:5173/login` |
 | `SYNC_API_KEY` | Chave para autorizar sincronização | `conecta-ufc-dev-key` |
 
 ### 2. Scraping Worker (`conecta-ufc-scrapings/.env`)
@@ -55,6 +57,7 @@ O Postgres nao e publicado na porta do host; ele fica disponivel apenas como `po
 
 O Keycloak e importado com SMTP apontando para o container `mailpit`.
 Isso permite testar recuperacao de senha localmente sem configurar Gmail, SendGrid ou outro provedor externo.
+O realm tambem e importado com `frontendUrl=http://localhost:8080`, para que os links enviados por email apontem para uma URL acessivel fora da rede interna do Docker.
 Se o volume do Keycloak ja existir, rode `docker compose down -v` e depois `docker compose up -d --build` para importar novamente o realm com essa configuracao.
 
 ---

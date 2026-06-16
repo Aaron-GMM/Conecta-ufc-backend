@@ -19,6 +19,7 @@ services:
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
       KC_HTTP_PORT: 8080
+      KC_HOSTNAME: http://localhost:8080
       KC_HOSTNAME_STRICT: "false"
     ports:
       - "8080:8080"
@@ -54,7 +55,9 @@ services:
       KEYCLOAK_REALM: conecta-ufc
       KEYCLOAK_CLIENT_ID: conecta-ufc-backend
       KEYCLOAK_CLIENT_SECRET: conecta-ufc-dev-secret
+      KEYCLOAK_FRONTEND_CLIENT_ID: conecta-ufc-frontend
       FRONTEND_ORIGIN: http://localhost:5173
+      FRONTEND_LOGIN_URL: http://localhost:5173/login
       SYNC_API_KEY: conecta-ufc-dev-key
     depends_on:
       - postgres

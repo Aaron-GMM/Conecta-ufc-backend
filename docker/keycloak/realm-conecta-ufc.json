@@ -1,6 +1,9 @@
 {
   "realm": "conecta-ufc",
   "enabled": true,
+  "attributes": {
+    "frontendUrl": "http://localhost:8080"
+  },
   "registrationAllowed": false,
   "resetPasswordAllowed": true,
   "loginWithEmailAllowed": true,
