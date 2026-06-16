@@ -43,10 +43,19 @@ A maneira mais simples de subir toda a stack (Postgres, Keycloak, Backend, Worke
 docker compose up -d --build
 ```
 
+O `docker-compose.yml` ja define valores padrao de desenvolvimento para a comunicacao entre Backend, Keycloak, Postgres e Worker.
+Arquivos `.env` continuam opcionais para sobrescrever configuracoes locais, mas nao sao obrigatorios para subir a stack de desenvolvimento.
+O Postgres nao e publicado na porta do host; ele fica disponivel apenas como `postgres:5432` dentro da rede do Compose para evitar colisao com bancos locais da maquina.
+
 ### Verificação de Saúde
 *   **Keycloak:** [http://localhost:8080](http://localhost:8080) (Admin: `admin`/`admin`)
+*   **Caixa de email local:** [http://localhost:8025](http://localhost:8025)
 *   **Backend Core:** [http://localhost:8000/docs](http://localhost:8000/docs)
 *   **Scraping API:** [http://localhost:8001/docs](http://localhost:8001/docs)
+
+O Keycloak e importado com SMTP apontando para o container `mailpit`.
+Isso permite testar recuperacao de senha localmente sem configurar Gmail, SendGrid ou outro provedor externo.
+Se o volume do Keycloak ja existir, rode `docker compose down -v` e depois `docker compose up -d --build` para importar novamente o realm com essa configuracao.
 
 ---
 
@@ -57,6 +66,7 @@ docker compose up -d --build
 #### Autenticação e Usuários (`/usuarios`)
 *   `POST /usuarios`: Cadastra um novo usuário no sistema e no Keycloak.
 *   `POST /usuarios/login`: Realiza o login e retorna o `access_token` JWT.
+*   `POST /usuarios/esqueci-senha`: Pede ao Keycloak para enviar o email de redefinicao de senha.
 
 #### Oportunidades (`/oportunidades`)
 *   `GET /oportunidades`: Lista oportunidades com suporte a paginação e filtros (`busca`, `origem`, `tipo`).
