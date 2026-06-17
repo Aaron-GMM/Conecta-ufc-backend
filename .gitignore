@@ -11,3 +11,7 @@ scraper_errors.log
 __pycache__/
 AUTH_KEYCLOAK_EXPLICADO.md
 estudos/
+codex/
+.tmp/
+.codex/
+
