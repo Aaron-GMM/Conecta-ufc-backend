@@ -1,10 +1,24 @@
 {
   "realm": "conecta-ufc",
   "enabled": true,
+  "attributes": {
+    "frontendUrl": "http://localhost:8080"
+  },
   "registrationAllowed": false,
   "resetPasswordAllowed": true,
   "loginWithEmailAllowed": true,
   "duplicateEmailsAllowed": false,
+  "smtpServer": {
+    "host": "mailpit",
+    "port": "1025",
+    "from": "no-reply@conecta-ufc.local",
+    "fromDisplayName": "Conecta UFC",
+    "replyTo": "no-reply@conecta-ufc.local",
+    "replyToDisplayName": "Conecta UFC",
+    "auth": "false",
+    "ssl": "false",
+    "starttls": "false"
+  },
   "clients": [
     {
       "clientId": "conecta-ufc-backend",

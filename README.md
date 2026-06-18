@@ -64,5 +64,20 @@ Consulte as instruções de configuração do ambiente no README de cada subsist
 docker compose up -d
 ```
 
+O `docker-compose.yml` ja possui valores padrao de desenvolvimento para backend, worker, Postgres e Keycloak. Arquivos `.env` locais continuam opcionais para ajustes especificos.
+O Postgres fica acessivel apenas na rede interna do Docker, o que evita conflito com um banco ja rodando na maquina.
+
 O painel do Keycloak estará disponível em `http://localhost:8080`.
+A caixa de entrada local para emails do Keycloak estará disponível em `http://localhost:8025`.
 A documentação interativa da API (Swagger) poderá ser acessada em `http://localhost:8000/docs`.
+
+O email de redefinicao de senha usa o client publico `conecta-ufc-frontend` e redireciona de volta para `http://localhost:5173/login`.
+
+Para um passo a passo de como validar as funcionalidades, consulte o [**Guia de Configuração e Testes**](./GUIA_CONFIGURACAO.md#🧪-guia-de-testes-mvp).
+
+Para testar o fluxo de "esqueci minha senha" em uma instalação local já existente, recrie o volume do Keycloak para reimportar o realm com SMTP configurado:
+
+```bash
+docker compose down -v
+docker compose up -d --build
+```

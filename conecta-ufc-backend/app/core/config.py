@@ -10,7 +10,11 @@ class Settings:
     keycloak_realm: str = getenv("KEYCLOAK_REALM", "conecta-ufc")
     keycloak_client_id: str = getenv("KEYCLOAK_CLIENT_ID", "conecta-ufc-backend")
     keycloak_client_secret: str | None = getenv("KEYCLOAK_CLIENT_SECRET")
+    keycloak_frontend_client_id: str = getenv(
+        "KEYCLOAK_FRONTEND_CLIENT_ID", "conecta-ufc-frontend"
+    )
     frontend_origin: str = getenv("FRONTEND_ORIGIN", "http://localhost:5173")
+    frontend_login_url: str = getenv("FRONTEND_LOGIN_URL", "http://localhost:5173/login")
     database_url: str | None = getenv("DATABASE_URL")
     sync_api_key: str = getenv("SYNC_API_KEY", "conecta-ufc-dev-key")
 

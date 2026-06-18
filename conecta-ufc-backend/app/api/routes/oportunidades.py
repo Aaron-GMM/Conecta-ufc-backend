@@ -9,6 +9,8 @@ from app.models.oportunidade import OportunidadeDB, FavoritoDB
 from app.schemas.oportunidade import OportunidadeResponse, PaginatedOportunidadeResponse, FavoritoResponse
 
 router = APIRouter(prefix="/oportunidades", tags=["oportunidades"])
+logger = logging.getLogger(__name__)
+
 
 @router.get("", response_model=PaginatedOportunidadeResponse)
 def listar_oportunidades(

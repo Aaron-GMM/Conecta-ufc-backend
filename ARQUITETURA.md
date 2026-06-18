@@ -195,21 +195,26 @@ erDiagram
         string origem
         string tipo
         string link
-        string datas
+        datetime data_inicio
+        datetime data_fim
+        float remuneracao
+        int vagas
+        datetime data_criacao
     }
-    
+
     RESULTADOS {
         int id PK
         string titulo
         string link
         int oportunidade_id FK
     }
-    
+
     FAVORITOS {
-        int usuario_id FK
+        int id PK
+        string usuario_id FK
         int oportunidade_id FK
+        datetime data_favoritado
     }
-    
     ALERTAS {
         int id PK
         string mensagem
