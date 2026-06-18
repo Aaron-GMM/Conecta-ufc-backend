@@ -29,9 +29,25 @@ class OportunidadeResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class PaginatedMeta(BaseModel):
+    total_elements: int
+    total_pages: int
+    current_page: int
+    size: int
+    has_next: bool
+    has_previous: bool
+
 class PaginatedOportunidadeResponse(BaseModel):
     data: List[OportunidadeResponse]
-    meta: dict
+    meta: PaginatedMeta
+
+class FavoritoResponse(BaseModel):
+    id: int
+    usuario_id: str
+    oportunidade_id: int
+    data_favoritado: datetime
+
+    model_config = ConfigDict(from_attributes=True)
 
 # Schemas para Sincronização (Ingestão)
 class ResultadoSync(BaseModel):
