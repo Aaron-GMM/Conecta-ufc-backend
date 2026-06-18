@@ -2,6 +2,7 @@ from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Float
 from sqlalchemy.orm import relationship
 from app.db.database import Base
 from datetime import datetime
+from sqlalchemy import UniqueConstraint
 
 
 class OportunidadeDB(Base):
@@ -39,10 +40,12 @@ class ResultadoDB(Base):
 
 class FavoritoDB(Base):
     __tablename__ = "favoritos"
+    __table_args__ = (
+          UniqueConstraint("usuario_id", "oportunidade_id", name="uq_favorito_usuario_oportunidade"),
+    )
 
     id = Column(Integer, primary_key=True, index=True)
-    usuario_id = Column(String, index=True)  # ID do Keycloak (sub)
-    oportunidade_id = Column(Integer, ForeignKey("oportunidades.id"))
-    data_favoritado = Column(DateTime, default=datetime.utcnow)
-
-    oportunidade = relationship("OportunidadeDB", back_populates="favoritos")
+    usuario_id = Column(String, nullable=False)
+    oportunidade_id = Column(Integer, ForeignKey("oportunidades.id"), nullable=False)
+    data_favorito = Column(DateTime, default=datetime.utcnow)
+    oportunidade = relationship("OportunidadeDB")

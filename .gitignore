@@ -10,3 +10,8 @@ scraper_errors.log
 *.swp
 __pycache__/
 AUTH_KEYCLOAK_EXPLICADO.md
+estudos/
+codex/
+.tmp/
+.codex/
+
