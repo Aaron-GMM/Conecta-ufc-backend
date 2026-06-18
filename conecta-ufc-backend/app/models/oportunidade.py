@@ -23,6 +23,7 @@ class OportunidadeDB(Base):
     data_criacao = Column(DateTime, default=datetime.utcnow)
 
     resultados = relationship("ResultadoDB", back_populates="oportunidade", cascade="all, delete-orphan")
+    favoritos = relationship("FavoritoDB", back_populates="oportunidade", cascade="all, delete-orphan")
 
 
 class ResultadoDB(Base):
