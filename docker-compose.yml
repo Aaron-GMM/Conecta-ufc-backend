@@ -6,6 +6,8 @@ services:
       POSTGRES_USER: conecta_user
       POSTGRES_PASSWORD: conecta_password
       POSTGRES_DB: conecta_db
+    ports:
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
@@ -52,6 +54,7 @@ services:
     environment:
       DATABASE_URL: postgresql://conecta_user:conecta_password@postgres:5432/conecta_db
       KEYCLOAK_SERVER_URL: http://keycloak:8080/
+      KEYCLOAK_ISSUER_URL: http://localhost:8080/realms/conecta-ufc
       KEYCLOAK_REALM: conecta-ufc
       KEYCLOAK_CLIENT_ID: conecta-ufc-backend
       KEYCLOAK_CLIENT_SECRET: conecta-ufc-dev-secret

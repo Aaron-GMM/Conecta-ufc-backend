@@ -1,10 +1,11 @@
 import math
+import logging
 from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.orm import Session, joinedload
 from typing import List, Optional
 
 from app.db.database import get_db
-from app.services.keycloak_service import get_current_user_id
+from app.core.auth import get_current_user_id
 from app.models.oportunidade import OportunidadeDB, FavoritoDB
 from app.schemas.oportunidade import OportunidadeResponse, PaginatedOportunidadeResponse, FavoritoResponse
 

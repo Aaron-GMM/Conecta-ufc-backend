@@ -7,6 +7,7 @@ load_dotenv()
 
 class Settings:
     keycloak_server_url: str = getenv("KEYCLOAK_SERVER_URL", "http://localhost:8080/")
+    keycloak_issuer_url: str | None = getenv("KEYCLOAK_ISSUER_URL")
     keycloak_realm: str = getenv("KEYCLOAK_REALM", "conecta-ufc")
     keycloak_client_id: str = getenv("KEYCLOAK_CLIENT_ID", "conecta-ufc-backend")
     keycloak_client_secret: str | None = getenv("KEYCLOAK_CLIENT_SECRET")
