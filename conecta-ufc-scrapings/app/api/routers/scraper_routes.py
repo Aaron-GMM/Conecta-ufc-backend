@@ -48,7 +48,9 @@ def rodar_scraper_ufc(db: Session = Depends(get_db)):
                 data_inicio=item.get("data_inicio"),
                 data_fim=item.get("data_fim"),
                 remuneracao=item.get("remuneracao"),
-                vagas=item.get("vagas")
+                vagas=item.get("vagas"),
+                coordenador=item.get("coordenador"),
+                descricao=item.get("descricao")
             )
             db.add(vaga_db)
             db.flush()
@@ -131,6 +133,8 @@ def rodar_scraper_fastef(db: Session = Depends(get_db)):
                 fantasma.data_fim = item.get("data_fim")
                 fantasma.remuneracao = item.get("remuneracao")
                 fantasma.vagas = item.get("vagas")
+                fantasma.coordenador = item.get("coordenador")
+                fantasma.descricao = item.get("descricao")
                 db.flush()
                 continue
 
@@ -142,7 +146,9 @@ def rodar_scraper_fastef(db: Session = Depends(get_db)):
             data_inicio=item.get("data_inicio"),
             data_fim=item.get("data_fim"),
             remuneracao=item.get("remuneracao"),
-            vagas=item.get("vagas")
+            vagas=item.get("vagas"),
+            coordenador=item.get("coordenador"),
+            descricao=item.get("descricao")
         )
         db.add(nova_vaga)
         salvos += 1

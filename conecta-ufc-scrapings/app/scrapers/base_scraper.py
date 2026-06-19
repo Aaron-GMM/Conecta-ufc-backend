@@ -32,3 +32,16 @@ class BaseScraper:
                 sleep(2)
         self.logger.critical(f"Falha total ao acessar {url} após {retries} tentativas.")
         return None
+
+    def normalizar_tipo(self, tipo_raw: str, titulo: str = "") -> str:
+        """Normaliza o tipo de bolsa para o padrão esperado no Frontend."""
+        texto = f"{tipo_raw} {titulo}".upper()
+        if "PAID" in texto: return "PAID"
+        if "PID" in texto: return "PID"
+        if "PIBC" in texto or "INICIAÇÃO CIENTÍFICA" in texto or "INICIACAO" in texto: return "PIBC"
+        if "P&D" in texto or "PESQUISA" in texto: return "P&D"
+        if "PET-SI" in texto or "PET SI" in texto or "SISTEMAS DE INFORMA" in texto: return "PET-SI"
+        if "PET" in texto: return "PET"
+        if "PPCA" in texto: return "PPCA"
+        if "EXTENSÃO" in texto or "EXTENSAO" in texto: return "Extensão"
+        return tipo_raw

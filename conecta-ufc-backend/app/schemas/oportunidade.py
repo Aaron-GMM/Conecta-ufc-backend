@@ -22,6 +22,8 @@ class OportunidadeResponse(BaseModel):
     data_fim: Optional[Union[datetime, str]] = None
     remuneracao: Optional[Union[float, str]] = None
     vagas: Optional[Union[int, str]] = None
+    coordenador: Optional[str] = None
+    descricao: Optional[str] = None
     data_criacao: Optional[Union[datetime, str]] = None
 
     resultados: List[ResultadoResponse] = Field(default_factory=list)
@@ -63,4 +65,6 @@ class OportunidadeSync(BaseModel):
     data_fim: Optional[datetime] = None
     remuneracao: Optional[float] = None
     vagas: Optional[int] = None
+    coordenador: Optional[str] = None
+    descricao: Optional[str] = None
     resultados: List[ResultadoSync] = Field(default_factory=list)

@@ -107,7 +107,9 @@ class PdfParser:
             "remuneracao": None,
             "vagas": None,
             "data_inicio": None,
-            "data_fim": None
+            "data_fim": None,
+            "coordenador": None,
+            "descricao": None
         }
 
         # 1. Remuneração
@@ -158,6 +160,41 @@ class PdfParser:
                         dados["data_fim"] = datetime(ano, mes_fim, dia_fim)
                 except Exception:
                     pass
+
+        # NOVO: Coordenador
+        match_email = re.search(r"[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+", texto_completo)
+        if match_email:
+            dados["coordenador"] = match_email.group(0)
+        else:
+            match_prof = re.search(r"(?:Coordenador[a]?|Prof(?:essor|a|\.)?)\s*[:-]?\s*([A-Z][A-Za-zÀ-ÿ\s]+)", texto_completo)
+            if match_prof:
+                nome_limpo = match_prof.group(1).strip()
+                if len(nome_limpo) > 4:
+                    dados["coordenador"] = " ".join(nome_limpo.split()[:4])
+        
+        # NOVO: Descrição
+        # 1. Tenta achar seções específicas
+        match_objeto = re.search(r"(?:DO OBJETO|1\.\s*OBJETO|1\.\s*DISPOSIÇÕES GERAIS|OBJETIVO)\s*\n*(.+?)(?=\n\n|\n\d|\Z)", texto_completo, re.IGNORECASE | re.DOTALL)
+        if match_objeto and len(match_objeto.group(1).strip()) > 50:
+            descricao = match_objeto.group(1).replace('\n', ' ').strip()
+            dados["descricao"] = descricao[:500] + ("..." if len(descricao) > 500 else "")
+        else:
+            # 2. Fallback inteligente: Pega a primeira sentença longa com contexto
+            texto_limpo = re.sub(r'\s+', ' ', texto_completo)
+            sentencas = [s.strip() + '.' for s in texto_limpo.split('. ') if s.strip()]
+            
+            descricao_encontrada = ""
+            for i, s in enumerate(sentencas):
+                if len(s) > 100 and "EDITAL" not in s[:20].upper() and "UNIVERSIDADE" not in s[:30].upper() and "RESULTADO" not in s[:30].upper():
+                    descricao_encontrada = s
+                    if i + 1 < len(sentencas) and len(descricao_encontrada) < 250:
+                        descricao_encontrada += ' ' + sentencas[i+1]
+                    break
+            
+            if descricao_encontrada:
+                dados["descricao"] = descricao_encontrada[:500] + ("..." if len(descricao_encontrada) > 500 else "")
+            else:
+                dados["descricao"] = texto_limpo[:500] + "..."
 
         self.logger.info(f"Dados extraídos com sucesso para '{titulo}': {dados}")
         return dados

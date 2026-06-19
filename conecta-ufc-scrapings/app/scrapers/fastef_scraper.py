@@ -45,12 +45,14 @@ class FastefScraper(BaseScraper):
                 vaga = {
                     "titulo": titulo,
                     "origem": self.origem,
-                    "tipo": "Processo Seletivo",
+                    "tipo": self.normalizar_tipo("Processo Seletivo", titulo),
                     "link": link,
                     "data_inicio": dados_extras.get("data_inicio"),
                     "data_fim": dados_extras.get("data_fim"),
                     "remuneracao": dados_extras.get("remuneracao"),
-                    "vagas": dados_extras.get("vagas")
+                    "vagas": dados_extras.get("vagas"),
+                    "coordenador": dados_extras.get("coordenador"),
+                    "descricao": dados_extras.get("descricao")
                 }
                 oportunidades.append(vaga)
 
