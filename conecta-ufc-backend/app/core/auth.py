@@ -23,6 +23,8 @@ def _criar_openid_keycloak() -> KeycloakOpenID:
 
 
 def _issuer_url() -> str:
+    if settings.keycloak_issuer_url:
+        return settings.keycloak_issuer_url.rstrip('/')
     return f"{settings.keycloak_server_url.rstrip('/')}/realms/{settings.keycloak_realm}"
 
 
@@ -76,3 +78,7 @@ def get_current_user_claims(
         )
 
     return validar_token_keycloak(credentials.credentials)
+
+
+def get_current_user_id(claims: dict = Depends(get_current_user_claims)) -> str:
+    return claims["sub"]
