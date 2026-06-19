@@ -19,6 +19,8 @@ class OportunidadeDB(Base):
     
     remuneracao = Column(Float, nullable=True)
     vagas = Column(Integer, nullable=True)
+    coordenador = Column(String, nullable=True)
+    descricao = Column(String, nullable=True)
 
     data_criacao = Column(DateTime, default=datetime.utcnow)
 

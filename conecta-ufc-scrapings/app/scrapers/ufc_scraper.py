@@ -18,31 +18,49 @@ class UfcScraper(BaseScraper):
 
     def _extrair_datas(self, texto: str):
         """
-        Usa Regex para encontrar padrões como 'de 02 a 05 de março de 2026'
-        e retorna objetos datetime correspondentes.
+        Usa Regex para encontrar padrões de datas no HTML.
         """
         if not texto:
             return None, None
 
         texto = texto.lower()
 
-        padrao = r"de\s+(\d{1,2})\s+a\s+(\d{1,2})\s+de\s+([a-zç]+)\s+de\s+(\d{4})"
-        match = re.search(padrao, texto)
+        # Padrão A: de 02 a 05 de março de 2026 | entre 02 e 05 de março de 2026
+        padrao_simples = r"(?:de|entre)\s+(\d{1,2})\s+(?:a|e|até)\s+(\d{1,2})\s+de\s+([a-zç]+)\s+de\s+(\d{4})"
+        match_simples = re.search(padrao_simples, texto)
 
-        if match:
+        if match_simples:
             try:
-                dia_inicio = int(match.group(1))
-                dia_fim = int(match.group(2))
-                mes_str = match.group(3)
-                ano = int(match.group(4))
+                dia_inicio = int(match_simples.group(1))
+                dia_fim = int(match_simples.group(2))
+                mes_str = match_simples.group(3)
+                ano = int(match_simples.group(4))
 
-                mes = self.MESES.get(mes_str)
+                meses = {"janeiro": 1, "fevereiro": 2, "março": 3, "marco": 3, "abril": 4, "maio": 5, "junho": 6, "julho": 7, "agosto": 8, "setembro": 9, "outubro": 10, "novembro": 11, "dezembro": 12}
+                mes = meses.get(mes_str)
                 if mes:
                     data_inicio = datetime(ano, mes, dia_inicio)
                     data_fim = datetime(ano, mes, dia_fim)
                     return data_inicio, data_fim
-            except Exception as e:
-                self.logger.warning(f"Erro ao converter datas com regex: {e}")
+            except Exception:
+                pass
+        
+        # Padrão B: 25/02/2026 a 03/03/2026
+        padrao_curto = r"(\d{2}/\d{2}(?:/\d{4})?)\s*(?:a|até|e|-)\s*(\d{2}/\d{2}/\d{4})"
+        match_curto = re.search(padrao_curto, texto)
+        if match_curto:
+            try:
+                d_inicio_str = match_curto.group(1)
+                d_fim_str = match_curto.group(2)
+                ano_atual = datetime.now().year
+                if len(d_inicio_str) <= 5:
+                    d_inicio_str += f"/{d_fim_str[-4:]}"
+                
+                data_inicio = datetime.strptime(d_inicio_str, "%d/%m/%Y")
+                data_fim = datetime.strptime(d_fim_str, "%d/%m/%Y")
+                return data_inicio, data_fim
+            except ValueError:
+                pass
 
         return None, None
 
@@ -95,12 +113,14 @@ class UfcScraper(BaseScraper):
                     vaga = {
                         "titulo": titulo_vaga,
                         "origem": self.origem,
-                        "tipo": categoria_geral,
+                        "tipo": self.normalizar_tipo(categoria_geral, titulo_vaga),
                         "link": link_edital,
                         "data_inicio": data_inicio_html or dados_pdf.get("data_inicio"),
                         "data_fim": data_fim_html or dados_pdf.get("data_fim"),
                         "remuneracao": dados_pdf.get("remuneracao"),
                         "vagas": dados_pdf.get("vagas"),
+                        "coordenador": dados_pdf.get("coordenador"),
+                        "descricao": dados_pdf.get("descricao"),
                         "resultados": links_adicionais
                     }
                     oportunidades.append(vaga)

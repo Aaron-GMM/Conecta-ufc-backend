@@ -25,6 +25,8 @@ class OportunidadeResponse(BaseModel):
     # NOVOS CAMPOS NA RESPOSTA
     remuneracao: Optional[float] = None
     vagas: Optional[int] = None
+    coordenador: Optional[str] = None
+    descricao: Optional[str] = None
 
     data_criacao: Optional[datetime] = None
 

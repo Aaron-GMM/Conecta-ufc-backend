@@ -21,6 +21,8 @@ class OportunidadeDB(Base):
     # NOVAS COLUNAS
     remuneracao = Column(Float, nullable=True)
     vagas = Column(Integer, nullable=True)
+    coordenador = Column(String, nullable=True)
+    descricao = Column(String, nullable=True)
 
     data_criacao = Column(DateTime, default=datetime.utcnow)
     sincronizado = Column(Integer, default=0)  # 0 = não sincronizado, 1 = sincronizado
