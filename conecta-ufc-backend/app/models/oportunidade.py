@@ -47,5 +47,5 @@ class FavoritoDB(Base):
     id = Column(Integer, primary_key=True, index=True)
     usuario_id = Column(String, nullable=False)
     oportunidade_id = Column(Integer, ForeignKey("oportunidades.id"), nullable=False)
-    data_favorito = Column(DateTime, default=datetime.utcnow)
+    data_favoritado = Column(DateTime, default=datetime.utcnow)
     oportunidade = relationship("OportunidadeDB")
