@@ -3,9 +3,12 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routes import usuarios, oportunidades, internal
 from app.core.config import settings
+from app.core.exceptions import configure_error_handlers
 
 
 app = FastAPI(title="Conecta UFC API")
+
+configure_error_handlers(app)
 
 app.add_middleware(
     CORSMiddleware,
