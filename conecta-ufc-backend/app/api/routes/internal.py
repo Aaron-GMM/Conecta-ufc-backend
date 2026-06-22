@@ -7,6 +7,7 @@ from app.db.database import get_db
 from app.core.config import settings
 from app.models.oportunidade import OportunidadeDB, ResultadoDB
 from app.schemas.oportunidade import OportunidadeSync
+from app.services.data_quality import filtrar_oportunidades_qualificadas
 
 router = APIRouter(prefix="/internal", tags=["internal"])
 
@@ -32,8 +33,15 @@ def sync_data(
     """
     oportunidades_novas = 0
     resultados_novos = 0
+    
+    # 1. Filtro de Qualidade de Dados
+    # Remove oportunidades muito defasadas (vazias) ou com links inacessíveis/bloqueados
+    data_qualificada = filtrar_oportunidades_qualificadas(data)
+    
+    # Registra quantas foram descartadas
+    oportunidades_descartadas = len(data) - len(data_qualificada)
 
-    for item in data:
+    for item in data_qualificada:
         # Busca oportunidade pelo link (único)
         vaga_db = db.query(OportunidadeDB).filter(OportunidadeDB.link == item.link).first()
 
@@ -67,6 +75,8 @@ def sync_data(
     db.commit()
     return {
         "status": "sucesso",
+        "oportunidades_recebidas": len(data),
+        "oportunidades_descartadas": oportunidades_descartadas,
         "oportunidades_novas": oportunidades_novas,
         "resultados_novos": resultados_novos
     }
