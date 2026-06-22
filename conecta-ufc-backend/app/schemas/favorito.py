@@ -1,5 +1,4 @@
-from pydantic import BaseModel, Field
-from pydantic_core import ConfigDict
+from pydantic import BaseModel, Field, ConfigDict
 
 class FavoritoCreate(BaseModel):
     oportunidade_id: int
