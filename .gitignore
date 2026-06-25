@@ -14,4 +14,8 @@ estudos/
 codex/
 .tmp/
 .codex/
-
+.idea
+test_flow.sh
+test_users.py
+upconfig.json
+update_upconfig.sh
