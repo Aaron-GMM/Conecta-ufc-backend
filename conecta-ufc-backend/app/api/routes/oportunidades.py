@@ -161,3 +161,56 @@ def listar_favoritos(
     )
 
     return paginar_resultados(query, page, size)
+
+
+@router.get("/alertas", response_model=PaginatedOportunidadeResponse)
+def listar_alertas(
+    page: int = Query(1, ge=1, description="Número da página"),
+    size: int = Query(20, ge=1, le=100, description="Tamanho da página"),
+    busca: Optional[str] = Query(None, description="Busca por título"),
+    origem: Optional[str] = Query(None, description="Filtrar por origem (ex: UFC, FASTEF)"),
+    tipo: Optional[str] = Query(None, description="Filtrar por tipo (ex: Estágio, Monitoria)"),
+    data_inicio: Optional[datetime] = Query(None, description="Filtrar a partir desta data de início"),
+    data_fim: Optional[datetime] = Query(None, description="Filtrar até esta data de fim"),
+    remuneracao_min: Optional[float] = Query(None, description="Remuneração mínima"),
+    remuneracao_max: Optional[float] = Query(None, description="Remuneração máxima"),
+    db: Session = Depends(get_db),
+    user_id: str = Depends(get_current_user_id)
+):
+    """
+    Lista todas as oportunidades correspondentes aos tipos de alertas inscritos pelo usuário logado com filtros e paginação.
+    """
+    from app.services.keycloak_service import _criar_admin_keycloak
+    
+    try:
+        keycloak_admin = _criar_admin_keycloak()
+        user_data = keycloak_admin.get_user(user_id)
+        tipos_alertas = user_data.get("attributes", {}).get("oportunidades", [])
+    except Exception as e:
+        logger.error(f"Erro ao buscar atributos de alerta do usuário {user_id} no Keycloak: {e}")
+        tipos_alertas = []
+
+    if not tipos_alertas:
+        return {
+            "data": [],
+            "meta": {
+                "total_elements": 0,
+                "total_pages": 0,
+                "current_page": page,
+                "size": size,
+                "has_next": False,
+                "has_previous": False
+            }
+        }
+
+    query = (
+        db.query(OportunidadeDB)
+        .filter(OportunidadeDB.tipo.in_(tipos_alertas))
+        .options(joinedload(OportunidadeDB.resultados))
+    )
+    
+    query = aplicar_filtros_oportunidades(
+        query, busca, origem, tipo, data_inicio, data_fim, remuneracao_min, remuneracao_max
+    )
+
+    return paginar_resultados(query, page, size)
