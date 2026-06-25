@@ -3,7 +3,7 @@ import logging
 from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.orm import Session, joinedload
 from typing import List, Optional
-
+from datetime import datetime
 from app.db.database import get_db
 from app.core.auth import get_current_user_id
 from app.models.oportunidade import OportunidadeDB, FavoritoDB
@@ -13,33 +13,38 @@ router = APIRouter(prefix="/oportunidades", tags=["oportunidades"])
 logger = logging.getLogger(__name__)
 
 
-@router.get("", response_model=PaginatedOportunidadeResponse)
-def listar_oportunidades(
-    page: int = Query(1, ge=1, description="Número da página"),
-    size: int = Query(20, ge=1, le=100, description="Tamanho da página"),
-    busca: Optional[str] = Query(None, description="Busca por título"),
-    origem: Optional[str] = Query(None, description="Filtrar por origem (ex: UFC, FASTEF)"),
-    tipo: Optional[str] = Query(None, description="Filtrar por tipo (ex: Estágio, Monitoria)"),
-    db: Session = Depends(get_db)
+def aplicar_filtros_oportunidades(
+    query,
+    busca: Optional[str],
+    origem: Optional[str],
+    tipo: Optional[str],
+    data_inicio: Optional[datetime],
+    data_fim: Optional[datetime],
+    remuneracao_min: Optional[float],
+    remuneracao_max: Optional[float]
 ):
-    """
-    Retorna a lista de oportunidades com filtros e paginação.
-    """
-    query = db.query(OportunidadeDB).options(joinedload(OportunidadeDB.resultados))
-
     if busca:
         query = query.filter(OportunidadeDB.titulo.ilike(f"%{busca}%"))
     if origem:
         query = query.filter(OportunidadeDB.origem == origem)
     if tipo:
         query = query.filter(OportunidadeDB.tipo == tipo)
+    if data_inicio:
+        query = query.filter(OportunidadeDB.data_inicio >= data_inicio)
+    if data_fim:
+        query = query.filter(OportunidadeDB.data_fim <= data_fim)
+    if remuneracao_min is not None:
+        query = query.filter(OportunidadeDB.remuneracao >= remuneracao_min)
+    if remuneracao_max is not None:
+        query = query.filter(OportunidadeDB.remuneracao <= remuneracao_max)
+    return query
 
+def paginar_resultados(query, page: int, size: int):
     total_elements = query.count()
     total_pages = math.ceil(total_elements / size) if total_elements > 0 else 0
     offset = (page - 1) * size
-
     oportunidades = query.order_by(OportunidadeDB.data_criacao.desc()).offset(offset).limit(size).all()
-
+    
     return {
         "data": oportunidades,
         "meta": {
@@ -51,6 +56,31 @@ def listar_oportunidades(
             "has_previous": page > 1
         }
     }
+
+
+@router.get("", response_model=PaginatedOportunidadeResponse)
+def listar_oportunidades(
+    page: int = Query(1, ge=1, description="Número da página"),
+    size: int = Query(20, ge=1, le=100, description="Tamanho da página"),
+    busca: Optional[str] = Query(None, description="Busca por título"),
+    origem: Optional[str] = Query(None, description="Filtrar por origem (ex: UFC, FASTEF)"),
+    tipo: Optional[str] = Query(None, description="Filtrar por tipo (ex: Estágio, Monitoria)"),
+    data_inicio: Optional[datetime] = Query(None, description="Filtrar a partir desta data de início"),
+    data_fim: Optional[datetime] = Query(None, description="Filtrar até esta data de fim"),
+    remuneracao_min: Optional[float] = Query(None, description="Remuneração mínima"),
+    remuneracao_max: Optional[float] = Query(None, description="Remuneração máxima"),
+    db: Session = Depends(get_db)
+):
+    """
+    Retorna a lista de oportunidades com filtros e paginação.
+    """
+    query = db.query(OportunidadeDB).options(joinedload(OportunidadeDB.resultados))
+    
+    query = aplicar_filtros_oportunidades(
+        query, busca, origem, tipo, data_inicio, data_fim, remuneracao_min, remuneracao_max
+    )
+
+    return paginar_resultados(query, page, size)
 
 @router.post("/{oportunidade_id}/favoritar", status_code=201)
 def favoritar_oportunidade(
@@ -102,15 +132,32 @@ def remover_favorito(
     db.commit()
     return None
 
-@router.get("/favoritos", response_model=List[OportunidadeResponse])
+@router.get("/favoritos", response_model=PaginatedOportunidadeResponse)
 def listar_favoritos(
+    page: int = Query(1, ge=1, description="Número da página"),
+    size: int = Query(20, ge=1, le=100, description="Tamanho da página"),
+    busca: Optional[str] = Query(None, description="Busca por título"),
+    origem: Optional[str] = Query(None, description="Filtrar por origem (ex: UFC, FASTEF)"),
+    tipo: Optional[str] = Query(None, description="Filtrar por tipo (ex: Estágio, Monitoria)"),
+    data_inicio: Optional[datetime] = Query(None, description="Filtrar a partir desta data de início"),
+    data_fim: Optional[datetime] = Query(None, description="Filtrar até esta data de fim"),
+    remuneracao_min: Optional[float] = Query(None, description="Remuneração mínima"),
+    remuneracao_max: Optional[float] = Query(None, description="Remuneração máxima"),
     db: Session = Depends(get_db),
     user_id: str = Depends(get_current_user_id)
 ):
     """
-    Lista todas as oportunidades favoritadas pelo usuário logado.
+    Lista todas as oportunidades favoritadas pelo usuário logado com filtros e paginação.
     """
-    favoritos = db.query(FavoritoDB).filter(FavoritoDB.usuario_id == user_id).all()
-    oportunidades_ids = [f.oportunidade_id for f in favoritos]
+    query = (
+        db.query(OportunidadeDB)
+        .join(FavoritoDB, OportunidadeDB.id == FavoritoDB.oportunidade_id)
+        .filter(FavoritoDB.usuario_id == user_id)
+        .options(joinedload(OportunidadeDB.resultados))
+    )
     
-    return db.query(OportunidadeDB).filter(OportunidadeDB.id.in_(oportunidades_ids)).all()
+    query = aplicar_filtros_oportunidades(
+        query, busca, origem, tipo, data_inicio, data_fim, remuneracao_min, remuneracao_max
+    )
+
+    return paginar_resultados(query, page, size)
