@@ -4,11 +4,13 @@ from fastapi import HTTPException, status
 from keycloak.exceptions import KeycloakError
 from app.services.keycloak_service import (
     _criar_admin_keycloak,
+    atualizar_usuario_keycloak,
     criar_usuario_keycloak,
     login_keycloak,
+    obter_usuario_keycloak,
     recuperar_senha_keycloak
 )
-from app.schemas.usuario import UsuarioCreate, LoginRequest
+from app.schemas.usuario import UsuarioCreate, UsuarioUpdate, LoginRequest
 from app.schemas.esquecisenha import EsqueciSenhaRequest
 
 # --- Testes para _criar_admin_keycloak ---
@@ -103,6 +105,143 @@ def test_criar_usuario_keycloak_erro_generico_lanca_400(mock_criar_admin):
         criar_usuario_keycloak(usuario)
         
     assert exc_info.value.status_code == status.HTTP_400_BAD_REQUEST
+
+
+# --- Testes para obter_usuario_keycloak ---
+
+@patch("app.services.keycloak_service._criar_admin_keycloak")
+def test_obter_usuario_keycloak_retorna_perfil_completo(mock_criar_admin):
+    mock_admin = MagicMock()
+    mock_admin.get_user.return_value = {
+        "id": "user-1",
+        "email": "usuario@teste.com",
+        "username": "usuario@teste.com",
+        "firstName": "João",
+        "lastName": "Silva",
+        "attributes": {
+            "curso": ["Computação"],
+            "oportunidades": ["Bolsa", "Estágio"],
+        },
+    }
+    mock_criar_admin.return_value = mock_admin
+
+    resultado = obter_usuario_keycloak("user-1")
+
+    assert resultado == {
+        "sub": "user-1",
+        "email": "usuario@teste.com",
+        "preferred_username": "usuario@teste.com",
+        "preferencias": ["Bolsa", "Estágio"],
+        "nome": "João Silva",
+        "curso": "Computação",
+        "oportunidades": ["Bolsa", "Estágio"],
+    }
+
+
+@patch("app.services.keycloak_service._criar_admin_keycloak")
+def test_obter_usuario_keycloak_nome_repetido_retorna_nome_unico(mock_criar_admin):
+    mock_admin = MagicMock()
+    mock_admin.get_user.return_value = {
+        "id": "user-1",
+        "email": "maria@teste.com",
+        "username": "maria@teste.com",
+        "firstName": "Maria",
+        "lastName": "Maria",
+        "attributes": {},
+    }
+    mock_criar_admin.return_value = mock_admin
+
+    resultado = obter_usuario_keycloak("user-1")
+
+    assert resultado["nome"] == "Maria"
+    assert resultado["curso"] == ""
+    assert resultado["preferencias"] == []
+
+
+# --- Testes para atualizar_usuario_keycloak ---
+
+@patch("app.services.keycloak_service._criar_admin_keycloak")
+def test_atualizar_usuario_keycloak_atualiza_campos_e_preserva_atributos(mock_criar_admin):
+    mock_admin = MagicMock()
+    mock_admin.get_user.side_effect = [
+        {"attributes": {"curso": ["Computação"]}},
+        {
+            "id": "user-1",
+            "email": "novo@teste.com",
+            "username": "antigo@teste.com",
+            "firstName": "João",
+            "lastName": "Silva",
+            "attributes": {
+                "curso": ["Computação"],
+                "oportunidades": ["Bolsa", "Estágio"],
+            },
+        },
+    ]
+    mock_criar_admin.return_value = mock_admin
+    atualizacao = UsuarioUpdate(
+        email="novo@teste.com",
+        nome="João Silva",
+        preferencias=["Bolsa", "Estágio"],
+    )
+
+    resultado = atualizar_usuario_keycloak("user-1", atualizacao)
+
+    payload = mock_admin.update_user.call_args.args[1]
+    assert payload["email"] == "novo@teste.com"
+    assert payload["emailVerified"] is False
+    assert payload["firstName"] == "João"
+    assert payload["lastName"] == "Silva"
+    assert payload["attributes"]["curso"] == ["Computação"]
+    assert payload["attributes"]["oportunidades"] == ["Bolsa", "Estágio"]
+    assert resultado["nome"] == "João Silva"
+    assert resultado["preferencias"] == ["Bolsa", "Estágio"]
+    assert resultado["sub"] == "user-1"
+
+
+@patch("app.services.keycloak_service._criar_admin_keycloak")
+def test_atualizar_usuario_keycloak_email_duplicado_retorna_409(mock_criar_admin):
+    mock_admin = MagicMock()
+    mock_admin.get_user.return_value = {"attributes": {}}
+    erro = KeycloakError("Error 409: Conflict")
+    erro.response_code = 409
+    mock_admin.update_user.side_effect = erro
+    mock_criar_admin.return_value = mock_admin
+
+    with pytest.raises(HTTPException) as exc_info:
+        atualizar_usuario_keycloak(
+            "user-1",
+            UsuarioUpdate(email="duplicado@teste.com"),
+        )
+
+    assert exc_info.value.status_code == status.HTTP_409_CONFLICT
+
+
+@patch("app.services.keycloak_service._criar_admin_keycloak")
+def test_atualizar_usuario_keycloak_nome_unico_atende_requisito_do_realm(mock_criar_admin):
+    mock_admin = MagicMock()
+    mock_admin.get_user.side_effect = [
+        {"attributes": {}},
+        {
+            "id": "user-1",
+            "email": "maria@teste.com",
+            "username": "maria@teste.com",
+            "firstName": "Maria",
+            "lastName": "Maria",
+            "attributes": {},
+        },
+    ]
+    mock_criar_admin.return_value = mock_admin
+
+    resultado = atualizar_usuario_keycloak(
+        "user-1",
+        UsuarioUpdate(nome="Maria"),
+    )
+
+    payload = mock_admin.update_user.call_args.args[1]
+    assert payload["firstName"] == "Maria"
+    assert payload["lastName"] == "Maria"
+    assert resultado["nome"] == "Maria"
+
 
 # --- Testes para login_keycloak ---
 

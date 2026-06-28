@@ -1,6 +1,7 @@
 import math
 import logging
 from fastapi import APIRouter, Depends, Query, HTTPException
+from sqlalchemy import func
 from sqlalchemy.orm import Session, joinedload
 from typing import List, Optional
 from datetime import datetime
@@ -39,11 +40,16 @@ def aplicar_filtros_oportunidades(
         query = query.filter(OportunidadeDB.remuneracao <= remuneracao_max)
     return query
 
-def paginar_resultados(query, page: int, size: int):
+def paginar_resultados(query, page: int, size: int, *criterios_ordenacao):
     total_elements = query.count()
     total_pages = math.ceil(total_elements / size) if total_elements > 0 else 0
     offset = (page - 1) * size
-    oportunidades = query.order_by(OportunidadeDB.data_criacao.desc()).offset(offset).limit(size).all()
+    if not criterios_ordenacao:
+        criterios_ordenacao = (
+            OportunidadeDB.data_criacao.desc().nulls_last(),
+            OportunidadeDB.id.desc(),
+        )
+    oportunidades = query.order_by(*criterios_ordenacao).offset(offset).limit(size).all()
     
     return {
         "data": oportunidades,
@@ -80,7 +86,73 @@ def listar_oportunidades(
         query, busca, origem, tipo, data_inicio, data_fim, remuneracao_min, remuneracao_max
     )
 
-    return paginar_resultados(query, page, size)
+    return paginar_resultados(
+        query,
+        page,
+        size,
+        OportunidadeDB.data_criacao.desc().nulls_last(),
+        OportunidadeDB.id.desc(),
+    )
+
+
+@router.get("/ordenadas/a-z", response_model=PaginatedOportunidadeResponse)
+def listar_oportunidades_ordenadas_a_z(
+    page: int = Query(1, ge=1, description="Número da página"),
+    size: int = Query(20, ge=1, le=100, description="Tamanho da página"),
+    busca: Optional[str] = Query(None, description="Busca por título"),
+    origem: Optional[str] = Query(None, description="Filtrar por origem (ex: UFC, FASTEF)"),
+    tipo: Optional[str] = Query(None, description="Filtrar por tipo (ex: Estágio, Monitoria)"),
+    data_inicio: Optional[datetime] = Query(None, description="Filtrar a partir desta data de início"),
+    data_fim: Optional[datetime] = Query(None, description="Filtrar até esta data de fim"),
+    remuneracao_min: Optional[float] = Query(None, description="Remuneração mínima"),
+    remuneracao_max: Optional[float] = Query(None, description="Remuneração máxima"),
+    db: Session = Depends(get_db)
+):
+    """
+    Retorna a lista de oportunidades com filtros, paginação e ordenação por título de A a Z.
+    """
+    query = db.query(OportunidadeDB).options(joinedload(OportunidadeDB.resultados))
+    query = aplicar_filtros_oportunidades(
+        query, busca, origem, tipo, data_inicio, data_fim, remuneracao_min, remuneracao_max
+    )
+
+    return paginar_resultados(
+        query,
+        page,
+        size,
+        func.lower(OportunidadeDB.titulo).asc().nulls_last(),
+        OportunidadeDB.id.asc(),
+    )
+
+
+@router.get("/ordenadas/mais-recentes", response_model=PaginatedOportunidadeResponse)
+def listar_oportunidades_ordenadas_por_data_recente(
+    page: int = Query(1, ge=1, description="Número da página"),
+    size: int = Query(20, ge=1, le=100, description="Tamanho da página"),
+    busca: Optional[str] = Query(None, description="Busca por título"),
+    origem: Optional[str] = Query(None, description="Filtrar por origem (ex: UFC, FASTEF)"),
+    tipo: Optional[str] = Query(None, description="Filtrar por tipo (ex: Estágio, Monitoria)"),
+    data_inicio: Optional[datetime] = Query(None, description="Filtrar a partir desta data de início"),
+    data_fim: Optional[datetime] = Query(None, description="Filtrar até esta data de fim"),
+    remuneracao_min: Optional[float] = Query(None, description="Remuneração mínima"),
+    remuneracao_max: Optional[float] = Query(None, description="Remuneração máxima"),
+    db: Session = Depends(get_db)
+):
+    """
+    Retorna a lista de oportunidades com filtros, paginação e ordenação da mais recente para a mais antiga.
+    """
+    query = db.query(OportunidadeDB).options(joinedload(OportunidadeDB.resultados))
+    query = aplicar_filtros_oportunidades(
+        query, busca, origem, tipo, data_inicio, data_fim, remuneracao_min, remuneracao_max
+    )
+
+    return paginar_resultados(
+        query,
+        page,
+        size,
+        OportunidadeDB.data_criacao.desc().nulls_last(),
+        OportunidadeDB.id.desc(),
+    )
 
 @router.post("/{oportunidade_id}/favoritar", status_code=201)
 def favoritar_oportunidade(

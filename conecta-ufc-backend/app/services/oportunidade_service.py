@@ -52,14 +52,21 @@ def oportunidade_response(oportunidade: OportunidadeDB) -> dict:
     }
 
 
-def listar_oportunidades_ordenadas(db: Session) -> list[dict]:
+def _listar_oportunidades_com_ordenacao(db: Session, *criterios_ordenacao) -> list[dict]:
     oportunidades = (
         db.query(OportunidadeDB)
         .options(joinedload(OportunidadeDB.resultados))
-        .order_by(OportunidadeDB.data_fim.asc().nulls_last())
+        .order_by(*criterios_ordenacao)
         .all()
     )
 
     return [oportunidade_response(oportunidade) for oportunidade in oportunidades]
+
+
+def listar_oportunidades_ordenadas(db: Session) -> list[dict]:
+    return _listar_oportunidades_com_ordenacao(
+        db,
+        OportunidadeDB.data_fim.asc().nulls_last(),
+    )
 
 

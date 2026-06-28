@@ -120,8 +120,8 @@ def test_integration_oportunidades_listar_favoritos_com_sucesso(client, db_sessi
     # Assert
     assert response.status_code == 200
     dados = response.json()
-    assert len(dados) == 2
-    titulos = [item["titulo"] for item in dados]
+    assert dados["meta"]["total_elements"] == 2
+    titulos = [item["titulo"] for item in dados["data"]]
     assert "Favorito 1" in titulos
     assert "Favorito 2" in titulos
     assert "Nao Favorito" not in titulos

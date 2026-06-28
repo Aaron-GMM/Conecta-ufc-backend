@@ -6,10 +6,31 @@ from keycloak.exceptions import KeycloakError
 
 from app.core.config import settings
 from app.schemas.esquecisenha import EsqueciSenhaRequest
-from app.schemas.usuario import LoginRequest, UsuarioCreate
+from app.schemas.usuario import LoginRequest, UsuarioCreate, UsuarioUpdate
 
 
 logger = logging.getLogger(__name__)
+
+
+def _mapear_perfil_usuario(usuario: dict) -> dict:
+    atributos = usuario.get("attributes") or {}
+    oportunidades = atributos.get("oportunidades", [])
+    cursos = atributos.get("curso", [])
+    primeiro_nome = usuario.get("firstName")
+    sobrenome = usuario.get("lastName")
+    partes_nome = [primeiro_nome]
+    if sobrenome and sobrenome != primeiro_nome:
+        partes_nome.append(sobrenome)
+
+    return {
+        "sub": usuario["id"],
+        "email": usuario.get("email"),
+        "preferred_username": usuario.get("username"),
+        "preferencias": oportunidades,
+        "nome": " ".join(parte for parte in partes_nome if parte),
+        "curso": cursos[0] if cursos else "",
+        "oportunidades": oportunidades,
+    }
 
 
 def _criar_admin_keycloak() -> KeycloakAdmin:
@@ -71,6 +92,85 @@ def criar_usuario_keycloak(usuario: UsuarioCreate) -> str:
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Nao foi possivel criar o usuario no Keycloak. Verifique os dados.",
         ) from exc
+
+
+def obter_usuario_keycloak(usuario_id: str) -> dict:
+    keycloak_admin = _criar_admin_keycloak()
+
+    try:
+        usuario = keycloak_admin.get_user(usuario_id)
+    except KeycloakError as exc:
+        logger.exception("Falha ao obter usuario no Keycloak")
+        codigo = getattr(exc, "response_code", None)
+        raise HTTPException(
+            status_code=(
+                status.HTTP_404_NOT_FOUND
+                if codigo == status.HTTP_404_NOT_FOUND
+                else status.HTTP_502_BAD_GATEWAY
+            ),
+            detail=(
+                "Usuario nao encontrado."
+                if codigo == status.HTTP_404_NOT_FOUND
+                else "Nao foi possivel consultar o provedor de identidade."
+            ),
+        ) from exc
+
+    return _mapear_perfil_usuario(usuario)
+
+
+def atualizar_usuario_keycloak(usuario_id: str, usuario: UsuarioUpdate) -> dict:
+    keycloak_admin = _criar_admin_keycloak()
+
+    try:
+        usuario_atual = keycloak_admin.get_user(usuario_id)
+        payload = {}
+
+        if usuario.email is not None:
+            novo_email = str(usuario.email)
+            payload.update(
+                {
+                    "email": novo_email,
+                    "emailVerified": False,
+                }
+            )
+
+        if usuario.nome is not None:
+            partes_nome = usuario.nome.strip().split(maxsplit=1)
+            payload["firstName"] = partes_nome[0]
+            payload["lastName"] = (
+                partes_nome[1] if len(partes_nome) > 1 else partes_nome[0]
+            )
+
+        if usuario.preferencias is not None:
+            atributos = dict(usuario_atual.get("attributes") or {})
+            atributos["oportunidades"] = usuario.preferencias
+            payload["attributes"] = atributos
+
+        keycloak_admin.update_user(usuario_id, payload)
+        usuario_atualizado = keycloak_admin.get_user(usuario_id)
+    except KeycloakError as exc:
+        if getattr(exc, "response_code", None) == status.HTTP_409_CONFLICT or "409" in str(exc):
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Usuario ja cadastrado com este e-mail",
+            ) from exc
+
+        logger.exception("Falha ao atualizar usuario no Keycloak")
+        codigo = getattr(exc, "response_code", None)
+        raise HTTPException(
+            status_code=(
+                status.HTTP_404_NOT_FOUND
+                if codigo == status.HTTP_404_NOT_FOUND
+                else status.HTTP_502_BAD_GATEWAY
+            ),
+            detail=(
+                "Usuario nao encontrado."
+                if codigo == status.HTTP_404_NOT_FOUND
+                else "Nao foi possivel atualizar o usuario no provedor de identidade."
+            ),
+        ) from exc
+
+    return _mapear_perfil_usuario(usuario_atualizado)
 
 
 def login_keycloak(login: LoginRequest) -> dict:
