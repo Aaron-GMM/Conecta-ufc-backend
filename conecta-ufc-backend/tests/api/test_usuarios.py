@@ -78,12 +78,22 @@ def test_login_credenciais_corretas_retorna_200_com_tokens(mock_login_keycloak):
 
 # --- Testes para obter_usuario_logado ---
 
-def test_obter_usuario_logado_token_valido_retorna_claims():
+@patch("app.api.routes.usuarios.obter_usuario_keycloak")
+def test_obter_usuario_logado_token_valido_retorna_perfil(mock_obter_usuario):
     # Arrange
     mock_claims = {
         "sub": "uuid-1234",
         "email": "user@ufc.br",
         "preferred_username": "user123"
+    }
+    mock_obter_usuario.return_value = {
+        "sub": "uuid-1234",
+        "email": "user@ufc.br",
+        "preferred_username": "user@ufc.br",
+        "preferencias": ["Bolsa", "Estágio"],
+        "nome": "Usuário Teste",
+        "curso": "Computação",
+        "oportunidades": ["Bolsa", "Estágio"],
     }
     
     # Fazendo override da dependência
@@ -100,7 +110,12 @@ def test_obter_usuario_logado_token_valido_retorna_claims():
     dados = response.json()
     assert dados["sub"] == "uuid-1234"
     assert dados["email"] == "user@ufc.br"
-    assert dados["preferred_username"] == "user123"
+    assert dados["preferred_username"] == "user@ufc.br"
+    assert dados["preferencias"] == ["Bolsa", "Estágio"]
+    assert dados["nome"] == "Usuário Teste"
+    assert dados["curso"] == "Computação"
+    assert dados["oportunidades"] == ["Bolsa", "Estágio"]
+    mock_obter_usuario.assert_called_once_with("uuid-1234")
 
 def test_obter_usuario_logado_sem_token_retorna_401():
     # Arrange
@@ -112,6 +127,54 @@ def test_obter_usuario_logado_sem_token_retorna_401():
     # Assert
     assert response.status_code == 401
     assert "Token Bearer nao informado" in response.json()["mensagem"]
+
+
+# --- Testes para atualizar_usuario ---
+
+@patch("app.api.routes.usuarios.atualizar_usuario_keycloak")
+def test_atualizar_usuario_retorna_dados_atualizados(mock_atualizar):
+    app.dependency_overrides[get_current_user_claims] = lambda: {"sub": "uuid-1234"}
+    mock_atualizar.return_value = {
+        "sub": "uuid-1234",
+        "email": "novo@ufc.br",
+        "preferred_username": "antigo@ufc.br",
+        "nome": "Novo Nome",
+        "curso": "Computação",
+        "preferencias": ["Estágio", "Bolsa"],
+        "oportunidades": ["Estágio", "Bolsa"],
+    }
+
+    response = client.put(
+        "/usuarios/me",
+        json={
+            "email": "novo@ufc.br",
+            "nome": "Novo Nome",
+            "preferencias": ["Estágio", "Bolsa"],
+        },
+    )
+    app.dependency_overrides = {}
+
+    assert response.status_code == 200
+    assert response.json()["preferencias"] == ["Estágio", "Bolsa"]
+    usuario_id, atualizacao = mock_atualizar.call_args.args
+    assert usuario_id == "uuid-1234"
+    assert atualizacao.nome == "Novo Nome"
+
+
+def test_atualizar_usuario_sem_campos_retorna_422():
+    app.dependency_overrides[get_current_user_claims] = lambda: {"sub": "uuid-1234"}
+
+    response = client.put("/usuarios/me", json={})
+    app.dependency_overrides = {}
+
+    assert response.status_code == 422
+
+
+def test_atualizar_usuario_sem_token_retorna_401():
+    response = client.put("/usuarios/me", json={"nome": "Novo Nome"})
+
+    assert response.status_code == 401
+
 
 # --- Testes para recuperar_senha ---
 

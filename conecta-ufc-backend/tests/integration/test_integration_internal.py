@@ -64,7 +64,7 @@ def test_integration_internal_sync_cria_novas_oportunidades_e_resultados(client,
     resultados = db_session.query(ResultadoDB).all()
     assert len(resultados) == 1
 
-def test_integration_internal_sync_ignora_oportunidades_existentes_mas_atualiza_resultados(client, db_session, override_sync_key, monkeypatch):
+def test_integration_internal_sync_atualiza_oportunidade_existente_e_resultados(client, db_session, override_sync_key, monkeypatch):
     import app.api.routes.internal as router_internal
     monkeypatch.setattr(router_internal, "filtrar_oportunidades_qualificadas", lambda ops: ops)
 
@@ -76,7 +76,7 @@ def test_integration_internal_sync_ignora_oportunidades_existentes_mas_atualiza_
     headers = {"X-Sync-Key": override_sync_key}
     payload = [
         {
-            "titulo": "Bolsa Atualizada", # Titulo mudou, mas link é igual, vai ignorar a atualização da vaga
+            "titulo": "Bolsa Atualizada",
             "origem": "UFC",
             "tipo": "Bolsa",
             "link": "http://mesmo-link",
@@ -96,10 +96,10 @@ def test_integration_internal_sync_ignora_oportunidades_existentes_mas_atualiza_
     assert dados["oportunidades_novas"] == 0
     assert dados["resultados_novos"] == 1
     
-    # Verifica que não foi atualizada
+    # Verifica que a oportunidade existente foi atualizada.
     db_session.refresh(vaga_existente)
-    assert vaga_existente.titulo == "Bolsa Antiga" # não atualiza
-    assert vaga_existente.remuneracao is None # não atualiza
+    assert vaga_existente.titulo == "Bolsa Atualizada"
+    assert vaga_existente.remuneracao == 500.0
     
     # Mas o resultado foi criado
     res = db_session.query(ResultadoDB).filter_by(oportunidade_id=vaga_existente.id).first()

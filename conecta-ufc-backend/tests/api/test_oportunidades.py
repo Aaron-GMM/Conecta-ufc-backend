@@ -5,6 +5,7 @@ from app.main import app
 from app.models.oportunidade import OportunidadeDB, FavoritoDB
 from app.core.auth import get_current_user_id
 from app.db.database import get_db
+from app.api.routes.oportunidades import paginar_resultados
 
 client = TestClient(app)
 
@@ -72,6 +73,85 @@ def test_listar_oportunidades_com_filtros_aplica_filtros_na_query(mock_db_sessio
     assert mock_options.filter.call_count == 1
     assert mock_filter1.filter.call_count == 1
     assert mock_filter2.filter.call_count == 1
+
+
+def test_listar_oportunidades_ordenadas_a_z_retorna_lista_ordenada(mock_db_session, override_dependencies):
+    mock_query = mock_db_session.query.return_value
+    mock_options = mock_query.options.return_value
+    mock_options.count.return_value = 1
+    mock_order = mock_options.order_by.return_value
+    mock_offset = mock_order.offset.return_value
+    mock_limit = mock_offset.limit.return_value
+    mock_limit.all.return_value = [
+        OportunidadeDB(
+            id=1,
+            titulo="Bolsa A",
+            origem="UFC",
+            tipo="Bolsa",
+            link="url-a",
+            data_inicio="2026-01-01",
+            data_fim="2026-12-31",
+            vagas=1,
+            remuneracao=500.0,
+            resultados=[],
+        )
+    ]
+
+    response = client.get("/oportunidades/ordenadas/a-z?page=1&size=20")
+
+    assert response.status_code == 200
+    dados = response.json()
+    assert dados["meta"]["total_elements"] == 1
+    assert dados["data"][0]["titulo"] == "Bolsa A"
+    criterios = mock_options.order_by.call_args.args
+    assert "lower(oportunidades.titulo) ASC NULLS LAST" in str(criterios[0])
+    assert "oportunidades.id ASC" in str(criterios[1])
+
+
+def test_listar_oportunidades_ordenadas_por_recencia_retorna_lista_ordenada(mock_db_session, override_dependencies):
+    mock_query = mock_db_session.query.return_value
+    mock_options = mock_query.options.return_value
+    mock_options.count.return_value = 1
+    mock_order = mock_options.order_by.return_value
+    mock_offset = mock_order.offset.return_value
+    mock_limit = mock_offset.limit.return_value
+    mock_limit.all.return_value = [
+        OportunidadeDB(
+            id=2,
+            titulo="Bolsa Nova",
+            origem="UFC",
+            tipo="Estágio",
+            link="url-b",
+            data_inicio="2026-01-01",
+            data_fim="2026-12-31",
+            vagas=2,
+            remuneracao=800.0,
+            resultados=[],
+        )
+    ]
+
+    response = client.get("/oportunidades/ordenadas/mais-recentes?page=1&size=20")
+
+    assert response.status_code == 200
+    dados = response.json()
+    assert dados["meta"]["total_elements"] == 1
+    assert dados["data"][0]["titulo"] == "Bolsa Nova"
+    criterios = mock_options.order_by.call_args.args
+    assert "oportunidades.data_criacao DESC NULLS LAST" in str(criterios[0])
+    assert "oportunidades.id DESC" in str(criterios[1])
+
+
+def test_paginar_resultados_sem_criterio_aplica_ordem_padrao_estavel():
+    query = MagicMock()
+    query.count.return_value = 0
+    query.order_by.return_value.offset.return_value.limit.return_value.all.return_value = []
+
+    resultado = paginar_resultados(query, page=1, size=20)
+
+    criterios = query.order_by.call_args.args
+    assert "oportunidades.data_criacao DESC NULLS LAST" in str(criterios[0])
+    assert "oportunidades.id DESC" in str(criterios[1])
+    assert resultado["data"] == []
 
 # --- Testes para favoritar_oportunidade ---
 
@@ -155,20 +235,32 @@ def test_remover_favorito_sucesso_remove_favorito(mock_db_session, override_depe
 # --- Testes para listar_favoritos ---
 
 def test_listar_favoritos_retorna_lista_de_vagas(mock_db_session, override_dependencies):
-    # Arrange
-    # Primeiro filtro (Favoritos)
-    fav1 = MagicMock(oportunidade_id=10)
-    fav2 = MagicMock(oportunidade_id=20)
-    
-    op1 = {"id": 10, "titulo": "Bolsa A", "origem": "UFC", "tipo": "Bolsa", "link": "l1", "data_inicio": "2026", "data_fim": "2026", "remuneracao": 400.0, "vagas": 1, "data_criacao": "2026", "resultados": []}
-    op2 = {"id": 20, "titulo": "Bolsa B", "origem": "UFC", "tipo": "Bolsa", "link": "l2", "data_inicio": "2026", "data_fim": "2026", "remuneracao": 400.0, "vagas": 1, "data_criacao": "2026", "resultados": []}
-    
-    # Simula dois calls de db.query().filter().all()
-    def side_effect_all():
-        yield [fav1, fav2] # call 1: favoritos
-        yield [op1, op2]   # call 2: oportunidades
-
-    mock_db_session.query.return_value.filter.return_value.all.side_effect = side_effect_all()
+    query = (
+        mock_db_session.query.return_value
+        .join.return_value
+        .filter.return_value
+        .options.return_value
+    )
+    query.count.return_value = 2
+    resultados = query.order_by.return_value.offset.return_value.limit.return_value
+    resultados.all.return_value = [
+        OportunidadeDB(
+            id=10,
+            titulo="Bolsa A",
+            origem="UFC",
+            tipo="Bolsa",
+            link="l1",
+            resultados=[],
+        ),
+        OportunidadeDB(
+            id=20,
+            titulo="Bolsa B",
+            origem="UFC",
+            tipo="Bolsa",
+            link="l2",
+            resultados=[],
+        ),
+    ]
     
     # Act
     response = client.get("/oportunidades/favoritos")
@@ -176,5 +268,6 @@ def test_listar_favoritos_retorna_lista_de_vagas(mock_db_session, override_depen
     # Assert
     assert response.status_code == 200
     dados = response.json()
-    assert len(dados) == 2
-    assert dados[0]["titulo"] == "Bolsa A"
+    assert dados["meta"]["total_elements"] == 2
+    assert len(dados["data"]) == 2
+    assert dados["data"][0]["titulo"] == "Bolsa A"

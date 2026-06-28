@@ -27,9 +27,21 @@ def mock_keycloak(monkeypatch):
     def mock_recuperar_senha(request):
         pass
 
+    def mock_obter_usuario(usuario_id):
+        return {
+            "sub": usuario_id,
+            "email": "usuario@teste.com",
+            "preferred_username": "usuario@teste.com",
+            "preferencias": ["Bolsa", "Estágio"],
+            "nome": "João Silva",
+            "curso": "Ciência da Computação",
+            "oportunidades": ["Bolsa", "Estágio"],
+        }
+
     import app.api.routes.usuarios as routers_usuarios
     monkeypatch.setattr(routers_usuarios, "criar_usuario_keycloak", mock_criar_usuario)
     monkeypatch.setattr(routers_usuarios, "login_keycloak", mock_login)
+    monkeypatch.setattr(routers_usuarios, "obter_usuario_keycloak", mock_obter_usuario)
     monkeypatch.setattr(routers_usuarios, "recuperar_senha_keycloak", mock_recuperar_senha)
 
 def mock_get_current_user_claims():
@@ -102,7 +114,7 @@ def test_integration_usuarios_login_senha_incorreta_retorna_401(client, mock_key
     assert response.status_code == 401
     assert "Email ou senha invalidos" in response.json().get("mensagem", response.json().get("detail", ""))
 
-def test_integration_usuarios_me_retorna_dados_do_usuario_autenticado(client, override_auth):
+def test_integration_usuarios_me_retorna_dados_do_usuario_autenticado(client, override_auth, mock_keycloak):
     # Act
     response = client.get("/usuarios/me")
     
@@ -111,6 +123,10 @@ def test_integration_usuarios_me_retorna_dados_do_usuario_autenticado(client, ov
     dados = response.json()
     assert dados["email"] == "usuario@teste.com"
     assert dados["sub"] == "fake_keycloak_id_123"
+    assert dados["preferencias"] == ["Bolsa", "Estágio"]
+    assert dados["nome"] == "João Silva"
+    assert dados["curso"] == "Ciência da Computação"
+    assert dados["oportunidades"] == ["Bolsa", "Estágio"]
 
 def test_integration_usuarios_esqueci_senha_retorna_sucesso(client, mock_keycloak):
     payload = {"email": "usuario@teste.com"}

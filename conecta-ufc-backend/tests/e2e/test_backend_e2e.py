@@ -114,7 +114,7 @@ def test_e2e_flow_sync_atualizacao_com_resultados(e2e_client):
 def test_e2e_flow_registro_sucesso(e2e_client, shared_data):
     payload = {
         "email": shared_data["email"], "senha": shared_data["senha"],
-        "nome": "Usuário", "sobrenome": "E2E", "curso": "Engenharia de Software", "oportunidades": []
+        "nome": "Usuário E2E", "curso": "Engenharia de Software", "oportunidades": []
     }
     response = e2e_client.post("/usuarios", json=payload)
     assert response.status_code == 201
@@ -122,7 +122,7 @@ def test_e2e_flow_registro_sucesso(e2e_client, shared_data):
 def test_e2e_flow_registro_duplicado(e2e_client, shared_data):
     payload = {
         "email": shared_data["email"], "senha": shared_data["senha"],
-        "nome": "Usuário", "sobrenome": "E2E", "curso": "Eng", "oportunidades": []
+        "nome": "Usuário E2E", "curso": "Eng", "oportunidades": []
     }
     response = e2e_client.post("/usuarios", json=payload)
     assert response.status_code == 409
@@ -150,6 +150,45 @@ def test_e2e_flow_consulta_sucesso(e2e_client, shared_data):
     headers = {"Authorization": f"Bearer {shared_data['token']}"}
     response = e2e_client.get("/usuarios/me", headers=headers)
     assert response.status_code == 200
+    dados = response.json()
+    assert dados["sub"]
+    assert dados["email"] == shared_data["email"]
+    assert dados["nome"] == "Usuário E2E"
+    assert dados["curso"] == "Engenharia de Software"
+    assert dados["preferencias"] == []
+    assert dados["oportunidades"] == []
+
+
+def test_e2e_flow_atualiza_perfil(e2e_client, shared_data):
+    headers = {"Authorization": f"Bearer {shared_data['token']}"}
+    novo_email = f"atualizado_{shared_data['email']}"
+    response = e2e_client.put(
+        "/usuarios/me",
+        headers=headers,
+        json={
+            "email": novo_email,
+            "nome": "Novo Nome",
+            "preferencias": ["Bolsa", "Estágio"],
+        },
+    )
+
+    assert response.status_code == 200
+    dados = response.json()
+    assert dados["email"] == novo_email
+    assert dados["nome"] == "Novo Nome"
+    assert dados["preferencias"] == ["Bolsa", "Estágio"]
+    assert dados["oportunidades"] == ["Bolsa", "Estágio"]
+    shared_data["email"] = novo_email
+
+
+def test_e2e_flow_login_com_email_atualizado(e2e_client, shared_data):
+    response = e2e_client.post(
+        "/usuarios/login",
+        json={"email": shared_data["email"], "senha": shared_data["senha"]},
+    )
+
+    assert response.status_code == 200
+    shared_data["token"] = response.json()["access_token"]
 
 # ----------------- FLUXO DE OPORTUNIDADES E FAVORITOS -----------------
 
@@ -159,6 +198,36 @@ def test_e2e_flow_lista_oportunidades_filtros(e2e_client, shared_data):
     dados = response.json()
     assert dados["meta"]["total_elements"] >= 1
     shared_data["oportunidade_id"] = dados["data"][0]["id"]
+
+
+def test_e2e_flow_lista_oportunidades_ordenada_a_z(e2e_client):
+    response = e2e_client.get(
+        "/oportunidades/ordenadas/a-z?origem=UFC&page=1&size=100"
+    )
+
+    assert response.status_code == 200
+    dados = response.json()
+    titulos = [oportunidade["titulo"] for oportunidade in dados["data"]]
+    assert titulos == sorted(titulos, key=str.casefold)
+    assert dados["meta"]["current_page"] == 1
+    assert dados["meta"]["size"] == 100
+
+
+def test_e2e_flow_lista_oportunidades_mais_recentes(e2e_client):
+    response = e2e_client.get(
+        "/oportunidades/ordenadas/mais-recentes?origem=UFC&page=1&size=100"
+    )
+
+    assert response.status_code == 200
+    dados = response.json()
+    datas = [
+        oportunidade["data_criacao"]
+        for oportunidade in dados["data"]
+        if oportunidade["data_criacao"] is not None
+    ]
+    assert datas == sorted(datas, reverse=True)
+    assert dados["meta"]["current_page"] == 1
+    assert dados["meta"]["size"] == 100
 
 def test_e2e_flow_favoritar_inexistente(e2e_client, shared_data):
     headers = {"Authorization": f"Bearer {shared_data['token']}"}
