@@ -32,7 +32,6 @@ def mock_keycloak(monkeypatch):
             "sub": usuario_id,
             "email": "usuario@teste.com",
             "preferred_username": "usuario@teste.com",
-            "preferencias": ["Bolsa", "Estágio"],
             "nome": "João Silva",
             "curso": "Ciência da Computação",
             "oportunidades": ["Bolsa", "Estágio"],
@@ -123,7 +122,6 @@ def test_integration_usuarios_me_retorna_dados_do_usuario_autenticado(client, ov
     dados = response.json()
     assert dados["email"] == "usuario@teste.com"
     assert dados["sub"] == "fake_keycloak_id_123"
-    assert dados["preferencias"] == ["Bolsa", "Estágio"]
     assert dados["nome"] == "João Silva"
     assert dados["curso"] == "Ciência da Computação"
     assert dados["oportunidades"] == ["Bolsa", "Estágio"]

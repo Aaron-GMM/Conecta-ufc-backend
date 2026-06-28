@@ -155,7 +155,7 @@ def test_e2e_flow_consulta_sucesso(e2e_client, shared_data):
     assert dados["email"] == shared_data["email"]
     assert dados["nome"] == "Usuário E2E"
     assert dados["curso"] == "Engenharia de Software"
-    assert dados["preferencias"] == []
+    assert dados["oportunidades"] == []
     assert dados["oportunidades"] == []
 
 
@@ -168,7 +168,7 @@ def test_e2e_flow_atualiza_perfil(e2e_client, shared_data):
         json={
             "email": novo_email,
             "nome": "Novo Nome",
-            "preferencias": ["Bolsa", "Estágio"],
+            "oportunidades": ["Bolsa", "Estágio"],
         },
     )
 
@@ -176,7 +176,7 @@ def test_e2e_flow_atualiza_perfil(e2e_client, shared_data):
     dados = response.json()
     assert dados["email"] == novo_email
     assert dados["nome"] == "Novo Nome"
-    assert dados["preferencias"] == ["Bolsa", "Estágio"]
+    assert dados["oportunidades"] == ["Bolsa", "Estágio"]
     assert dados["oportunidades"] == ["Bolsa", "Estágio"]
     shared_data["email"] = novo_email
 
