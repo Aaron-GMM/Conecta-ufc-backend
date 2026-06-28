@@ -20,18 +20,24 @@ class UsuarioResponse(BaseModel):
 class UsuarioUpdate(BaseModel):
     email: EmailStr | None = None
     nome: str | None = Field(default=None, min_length=1)
-    preferencias: list[str] | None = None
+    curso: str | None = Field(default=None, min_length=1)
+    oportunidades: list[str] | None = None
 
-    @field_validator("nome")
+    @field_validator("nome", "curso")
     @classmethod
-    def validar_nome(cls, nome: str | None):
-        if nome is not None and not nome.strip():
-            raise ValueError("O nome nao pode ser vazio")
-        return nome.strip() if nome is not None else None
+    def validar_texto_nao_vazio(cls, valor: str | None):
+        if valor is not None and not valor.strip():
+            raise ValueError("O campo nao pode ser vazio")
+        return valor.strip() if valor is not None else None
 
     @model_validator(mode="after")
     def validar_campo_informado(self):
-        if self.email is None and self.nome is None and self.preferencias is None:
+        if (
+            self.email is None
+            and self.nome is None
+            and self.curso is None
+            and self.oportunidades is None
+        ):
             raise ValueError("Informe ao menos um campo para atualizar")
         return self
 

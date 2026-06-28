@@ -26,7 +26,6 @@ def _mapear_perfil_usuario(usuario: dict) -> dict:
         "sub": usuario["id"],
         "email": usuario.get("email"),
         "preferred_username": usuario.get("username"),
-        "preferencias": oportunidades,
         "nome": " ".join(parte for parte in partes_nome if parte),
         "curso": cursos[0] if cursos else "",
         "oportunidades": oportunidades,
@@ -141,9 +140,12 @@ def atualizar_usuario_keycloak(usuario_id: str, usuario: UsuarioUpdate) -> dict:
                 partes_nome[1] if len(partes_nome) > 1 else partes_nome[0]
             )
 
-        if usuario.preferencias is not None:
+        if usuario.curso is not None or usuario.oportunidades is not None:
             atributos = dict(usuario_atual.get("attributes") or {})
-            atributos["oportunidades"] = usuario.preferencias
+            if usuario.curso is not None:
+                atributos["curso"] = [usuario.curso]
+            if usuario.oportunidades is not None:
+                atributos["oportunidades"] = usuario.oportunidades
             payload["attributes"] = atributos
 
         keycloak_admin.update_user(usuario_id, payload)

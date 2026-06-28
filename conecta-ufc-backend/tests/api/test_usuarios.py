@@ -90,7 +90,6 @@ def test_obter_usuario_logado_token_valido_retorna_perfil(mock_obter_usuario):
         "sub": "uuid-1234",
         "email": "user@ufc.br",
         "preferred_username": "user@ufc.br",
-        "preferencias": ["Bolsa", "Estágio"],
         "nome": "Usuário Teste",
         "curso": "Computação",
         "oportunidades": ["Bolsa", "Estágio"],
@@ -111,7 +110,6 @@ def test_obter_usuario_logado_token_valido_retorna_perfil(mock_obter_usuario):
     assert dados["sub"] == "uuid-1234"
     assert dados["email"] == "user@ufc.br"
     assert dados["preferred_username"] == "user@ufc.br"
-    assert dados["preferencias"] == ["Bolsa", "Estágio"]
     assert dados["nome"] == "Usuário Teste"
     assert dados["curso"] == "Computação"
     assert dados["oportunidades"] == ["Bolsa", "Estágio"]
@@ -139,8 +137,7 @@ def test_atualizar_usuario_retorna_dados_atualizados(mock_atualizar):
         "email": "novo@ufc.br",
         "preferred_username": "antigo@ufc.br",
         "nome": "Novo Nome",
-        "curso": "Computação",
-        "preferencias": ["Estágio", "Bolsa"],
+        "curso": "Engenharia de Software",
         "oportunidades": ["Estágio", "Bolsa"],
     }
 
@@ -149,16 +146,20 @@ def test_atualizar_usuario_retorna_dados_atualizados(mock_atualizar):
         json={
             "email": "novo@ufc.br",
             "nome": "Novo Nome",
-            "preferencias": ["Estágio", "Bolsa"],
+            "curso": "Engenharia de Software",
+            "oportunidades": ["Estágio", "Bolsa"],
         },
     )
     app.dependency_overrides = {}
 
     assert response.status_code == 200
-    assert response.json()["preferencias"] == ["Estágio", "Bolsa"]
+    assert response.json()["curso"] == "Engenharia de Software"
+    assert response.json()["oportunidades"] == ["Estágio", "Bolsa"]
     usuario_id, atualizacao = mock_atualizar.call_args.args
     assert usuario_id == "uuid-1234"
     assert atualizacao.nome == "Novo Nome"
+    assert atualizacao.curso == "Engenharia de Software"
+    assert atualizacao.oportunidades == ["Estágio", "Bolsa"]
 
 
 def test_atualizar_usuario_sem_campos_retorna_422():

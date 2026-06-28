@@ -131,7 +131,6 @@ def test_obter_usuario_keycloak_retorna_perfil_completo(mock_criar_admin):
         "sub": "user-1",
         "email": "usuario@teste.com",
         "preferred_username": "usuario@teste.com",
-        "preferencias": ["Bolsa", "Estágio"],
         "nome": "João Silva",
         "curso": "Computação",
         "oportunidades": ["Bolsa", "Estágio"],
@@ -155,7 +154,7 @@ def test_obter_usuario_keycloak_nome_repetido_retorna_nome_unico(mock_criar_admi
 
     assert resultado["nome"] == "Maria"
     assert resultado["curso"] == ""
-    assert resultado["preferencias"] == []
+    assert resultado["oportunidades"] == []
 
 
 # --- Testes para atualizar_usuario_keycloak ---
@@ -181,7 +180,8 @@ def test_atualizar_usuario_keycloak_atualiza_campos_e_preserva_atributos(mock_cr
     atualizacao = UsuarioUpdate(
         email="novo@teste.com",
         nome="João Silva",
-        preferencias=["Bolsa", "Estágio"],
+        curso="Engenharia de Software",
+        oportunidades=["Bolsa", "Estágio"],
     )
 
     resultado = atualizar_usuario_keycloak("user-1", atualizacao)
@@ -191,10 +191,10 @@ def test_atualizar_usuario_keycloak_atualiza_campos_e_preserva_atributos(mock_cr
     assert payload["emailVerified"] is False
     assert payload["firstName"] == "João"
     assert payload["lastName"] == "Silva"
-    assert payload["attributes"]["curso"] == ["Computação"]
+    assert payload["attributes"]["curso"] == ["Engenharia de Software"]
     assert payload["attributes"]["oportunidades"] == ["Bolsa", "Estágio"]
     assert resultado["nome"] == "João Silva"
-    assert resultado["preferencias"] == ["Bolsa", "Estágio"]
+    assert resultado["oportunidades"] == ["Bolsa", "Estágio"]
     assert resultado["sub"] == "user-1"
 
 
