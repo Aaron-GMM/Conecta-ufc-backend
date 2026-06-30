@@ -150,6 +150,7 @@ def listar_oportunidades_ordenadas_por_data_recente(
         query,
         page,
         size,
+        OportunidadeDB.data_inicio.desc().nulls_last(),
         OportunidadeDB.data_criacao.desc().nulls_last(),
         OportunidadeDB.id.desc(),
     )
