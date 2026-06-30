@@ -221,9 +221,9 @@ def test_e2e_flow_lista_oportunidades_mais_recentes(e2e_client):
     assert response.status_code == 200
     dados = response.json()
     datas = [
-        oportunidade["data_criacao"]
+        oportunidade["data_inicio"]
         for oportunidade in dados["data"]
-        if oportunidade["data_criacao"] is not None
+        if oportunidade["data_inicio"] is not None
     ]
     assert datas == sorted(datas, reverse=True)
     assert dados["meta"]["current_page"] == 1

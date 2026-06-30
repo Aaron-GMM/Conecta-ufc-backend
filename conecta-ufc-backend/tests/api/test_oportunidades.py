@@ -137,8 +137,9 @@ def test_listar_oportunidades_ordenadas_por_recencia_retorna_lista_ordenada(mock
     assert dados["meta"]["total_elements"] == 1
     assert dados["data"][0]["titulo"] == "Bolsa Nova"
     criterios = mock_options.order_by.call_args.args
-    assert "oportunidades.data_criacao DESC NULLS LAST" in str(criterios[0])
-    assert "oportunidades.id DESC" in str(criterios[1])
+    assert "oportunidades.data_inicio DESC NULLS LAST" in str(criterios[0])
+    assert "oportunidades.data_criacao DESC NULLS LAST" in str(criterios[1])
+    assert "oportunidades.id DESC" in str(criterios[2])
 
 
 def test_paginar_resultados_sem_criterio_aplica_ordem_padrao_estavel():
